@@ -247,3 +247,97 @@ func TestListStringPresets(t *testing.T) {
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &list))
 	assert.GreaterOrEqual(t, len(list), 1)
 }
+
+// ── Hybrid string tests ──────────────────────────────────────────────────────
+
+func TestCreateRacquet_HybridThreshold(t *testing.T) {
+	testhelper.InitTestDB()
+	r := setupRacquetRouter()
+	uid := seedUser(t, "hybrid_creator")
+
+	// main gauge 17 (16h) × 0.55 + cross gauge 16 (20h) × 0.45 = 8.8 + 9.0 = 17.8 → round = 18
+	w := testhelper.Do(r, testhelper.ReqAuth("POST", "/api/racquets", `{
+		"name":"Hybrid Racquet",
+		"string_name":"Solinco Confidential",
+		"gauge":"17",
+		"cross_string_name":"Solinco Hyper-G",
+		"cross_gauge":"16"
+	}`, uid))
+	assert.Equal(t, http.StatusCreated, w.Code)
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, "Solinco Confidential", resp["string_name"])
+	assert.Equal(t, "Solinco Hyper-G", resp["cross_string_name"])
+	assert.Equal(t, "16", resp["cross_gauge"])
+	// threshold = round(16*0.55 + 20*0.45) = round(8.8+9.0) = 18
+	assert.Equal(t, float64(18), resp["threshold_hours"])
+}
+
+func TestCreateRacquet_HybridUnknownGauge(t *testing.T) {
+	testhelper.InitTestDB()
+	r := setupRacquetRouter()
+	uid := seedUser(t, "hybrid_unknown")
+
+	// Unknown gauge on both → both default to 20h → threshold = round(20*0.55 + 20*0.45) = 20
+	w := testhelper.Do(r, testhelper.ReqAuth("POST", "/api/racquets", `{
+		"name":"Mystery Hybrid",
+		"string_name":"String A",
+		"cross_string_name":"String B"
+	}`, uid))
+	assert.Equal(t, http.StatusCreated, w.Code)
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(20), resp["threshold_hours"])
+}
+
+func TestRestringRacquet_HybridSetup(t *testing.T) {
+	testhelper.InitTestDB()
+	r := setupRacquetRouter()
+	uid := seedUser(t, "hybrid_restringer")
+	racquet := seedRacquet(t, uid, "Hybrid Stringer")
+
+	// Restring with hybrid: main 17 (16h), cross 15 (25h)
+	// threshold = round(16*0.55 + 25*0.45) = round(8.8+11.25) = round(20.05) = 20
+	w := testhelper.Do(r, testhelper.ReqAuth("POST",
+		fmt.Sprintf("/api/racquets/%d/restring", racquet.ID),
+		`{"string_name":"Luxilon ALU","gauge":"17","cross_string_name":"Babolat VS Touch","cross_gauge":"15"}`,
+		uid))
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, "Luxilon ALU", resp["string_name"])
+	assert.Equal(t, "Babolat VS Touch", resp["cross_string_name"])
+	assert.Equal(t, float64(20), resp["threshold_hours"])
+	assert.Equal(t, float64(0), resp["total_minutes"]) // counter reset
+}
+
+func TestRestringRacquet_NoActiveRecord(t *testing.T) {
+	// Restring when no active string record exists (e.g. manually deleted)
+	testhelper.InitTestDB()
+	r := setupRacquetRouter()
+	uid := seedUser(t, "no_sr_restringer")
+	racquet := models.Racquet{UserID: uid, Name: "Bare", ThresholdHours: 20}
+	require.NoError(t, database.DB.Create(&racquet).Error)
+	// Deliberately no StringRecord created
+
+	w := testhelper.Do(r, testhelper.ReqAuth("POST",
+		fmt.Sprintf("/api/racquets/%d/restring", racquet.ID),
+		`{"string_name":"RPM","gauge":"16"}`, uid))
+	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, "RPM", resp["string_name"])
+}
+
+func TestCreateRacquet_UnknownGaugeDefaultsTo20(t *testing.T) {
+	// gaugeDefaultThreshold("xyz") returns 0 → fallback to 20
+	testhelper.InitTestDB()
+	r := setupRacquetRouter()
+	uid := seedUser(t, "unknown_gauge_user")
+	w := testhelper.Do(r, testhelper.ReqAuth("POST", "/api/racquets",
+		`{"name":"R","gauge":"xyz"}`, uid))
+	assert.Equal(t, http.StatusCreated, w.Code)
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(20), resp["threshold_hours"])
+}

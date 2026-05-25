@@ -145,3 +145,26 @@ func TestMe_InvalidToken(t *testing.T) {
 	w := testhelper.Do(r, req)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
+
+func TestLogin_MissingFields(t *testing.T) {
+	testhelper.InitTestDB()
+	r := setupAuthRouter()
+	// Missing password field — ShouldBindJSON should fail
+	w := testhelper.Do(r, testhelper.Req("POST", "/api/auth/login", `{"username":"someone"}`))
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestLogin_MissingUsername(t *testing.T) {
+	testhelper.InitTestDB()
+	r := setupAuthRouter()
+	w := testhelper.Do(r, testhelper.Req("POST", "/api/auth/login", `{"password":"pass123"}`))
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestRegister_MissingFields(t *testing.T) {
+	testhelper.InitTestDB()
+	r := setupAuthRouter()
+	// No name, no username, no password — should 400
+	w := testhelper.Do(r, testhelper.Req("POST", "/api/auth/register", `{"email":"x@y.com"}`))
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
