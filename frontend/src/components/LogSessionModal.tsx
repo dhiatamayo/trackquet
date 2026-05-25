@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import type { SessionType, StringRecord } from '../types'
-import { format, parseISO, isWithinInterval, startOfDay } from 'date-fns'
+import { format, parseISO, startOfDay } from 'date-fns'
 
 interface Props {
   racquetName: string
@@ -32,9 +32,7 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
     [stringRecords, selectedRecordId]
   )
 
-  const minDate = selectedRecord
-    ? format(new Date(selectedRecord.started_at), 'yyyy-MM-dd')
-    : undefined
+  const minDate = undefined
   const maxDate = selectedRecord?.ended_at
     ? format(new Date(selectedRecord.ended_at), 'yyyy-MM-dd')
     : format(new Date(), 'yyyy-MM-dd')
@@ -42,13 +40,12 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
   const dateError = useMemo(() => {
     if (!date || !selectedRecord) return null
     const d = startOfDay(parseISO(date))
-    const start = startOfDay(new Date(selectedRecord.started_at))
     const end = selectedRecord.ended_at
       ? startOfDay(new Date(selectedRecord.ended_at))
       : startOfDay(new Date())
-    if (!isWithinInterval(d, { start, end })) {
+    if (d > end) {
       const fmt = (s: string) => format(new Date(s), 'MMM d, yyyy')
-      return `Date must be between ${fmt(selectedRecord.started_at)} and ${
+      return `Date must be on or before ${
         selectedRecord.ended_at ? fmt(selectedRecord.ended_at) : 'today'
       }`
     }

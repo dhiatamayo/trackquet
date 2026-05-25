@@ -81,17 +81,12 @@ func CreateSession(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "string record not found for this racquet"})
 			return
 		}
-		// Date must be on or after the record started
-		if sessionDate.Before(targetRecord.StartedAt.Truncate(24 * time.Hour)) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "session date is before this string configuration started"})
-			return
-		}
-		// Date must not exceed when the record ended (if it has ended)
+		session.StringRecordID = targetRecord.ID
+		// Only validate upper bound: session can't be after the string was retired
 		if targetRecord.EndedAt != nil && sessionDate.After(targetRecord.EndedAt.Truncate(24*time.Hour)) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "session date is after this string configuration was retired"})
 			return
 		}
-		session.StringRecordID = targetRecord.ID
 	} else {
 		// Attach to the currently active StringRecord
 		var activeRecord models.StringRecord
