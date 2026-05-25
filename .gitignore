@@ -2,6 +2,9 @@
 backend/trackquet.db
 backend/trackquet-server
 backend/.env
+backend/*.out
+backend/coverage
+backend/cov_handlers
 
 # Frontend
 frontend/.env

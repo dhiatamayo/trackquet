@@ -266,8 +266,13 @@ func DeleteRacquet(c *gin.Context) {
 		return
 	}
 
-	if err := database.DB.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Racquet{}).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	result := database.DB.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Racquet{})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": result.Error.Error()})
+		return
+	}
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "racquet not found"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "racquet deleted"})
