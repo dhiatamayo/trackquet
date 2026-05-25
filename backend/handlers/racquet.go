@@ -131,7 +131,15 @@ func GetRacquet(c *gin.Context) {
 	}
 
 	var racquet models.Racquet
-	result := database.DB.Preload("Sessions").Preload("StringRecords").Where("id = ? AND user_id = ?", id, userID).First(&racquet)
+	// Only preload sessions that belong to the active string record (ended_at IS NULL).
+	// Retired-string sessions still appear inside String History but not in Session History.
+	result := database.DB.
+		Preload("Sessions", `string_record_id IN (
+			SELECT id FROM string_records WHERE racquet_id = ? AND ended_at IS NULL
+		)`, id).
+		Preload("StringRecords").
+		Where("id = ? AND user_id = ?", id, userID).
+		First(&racquet)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "racquet not found"})
