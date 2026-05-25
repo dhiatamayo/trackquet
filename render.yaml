@@ -1,13 +1,16 @@
 # Render Blueprint — defines both services declaratively
 # Docs: https://render.com/docs/blueprint-spec
+# Cost: $0/month — free tier (native Go runtime + static site + free Postgres)
 
 services:
-  # ── Backend (Go) ────────────────────────────────────────────────────────────
+  # ── Backend (Go native — free tier) ─────────────────────────────────────────
   - type: web
     name: trackquet-backend
-    runtime: docker
-    dockerfilePath: ./backend/Dockerfile
-    dockerContext: ./backend
+    runtime: go
+    rootDir: backend
+    buildCommand: go build -o trackquet-server .
+    startCommand: ./trackquet-server
+    plan: free
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -19,15 +22,21 @@ services:
         value: "8080"
     healthCheckPath: /api/racquets
 
-  # ── Frontend (React static) ──────────────────────────────────────────────────
+  # ── Frontend (Static Site — free) ────────────────────────────────────────────
   - type: web
     name: trackquet-frontend
-    runtime: docker
-    dockerfilePath: ./frontend/Dockerfile
-    dockerContext: ./frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && VITE_API_URL=$VITE_API_URL npm run build
+    staticPublishPath: dist
+    plan: free
     envVars:
       - key: VITE_API_URL
         value: https://trackquet-backend.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
 
 databases:
   - name: trackquet-db
