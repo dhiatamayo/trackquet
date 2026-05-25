@@ -1,0 +1,12 @@
+# Backend
+backend/trackquet.db
+backend/trackquet-server
+backend/.env
+
+# Frontend
+frontend/.env
+frontend/node_modules/
+frontend/dist/
+
+# Docker
+.DS_Store

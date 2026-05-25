@@ -1,0 +1,36 @@
+# Render Blueprint — defines both services declaratively
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # ── Backend (Go) ────────────────────────────────────────────────────────────
+  - type: web
+    name: trackquet-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: trackquet-db
+          property: connectionString
+      - key: ALLOWED_ORIGINS
+        value: https://trackquet-frontend.onrender.com   # update after first deploy
+      - key: PORT
+        value: "8080"
+    healthCheckPath: /api/racquets
+
+  # ── Frontend (React static) ──────────────────────────────────────────────────
+  - type: web
+    name: trackquet-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    dockerBuildArgs:
+      - key: VITE_API_URL
+        value: https://trackquet-backend.onrender.com
+
+databases:
+  - name: trackquet-db
+    plan: free
+    databaseName: trackquet
+    user: trackquet
