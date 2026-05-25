@@ -46,6 +46,11 @@ func main() {
 	}
 	r.Use(cors.New(corsConfig))
 
+	// Public health check (used by Render)
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+
 	api := r.Group("/api")
 	{
 		// Auth (public)

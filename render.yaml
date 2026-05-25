@@ -20,7 +20,7 @@ services:
         value: https://trackquet-frontend.onrender.com   # update after first deploy
       - key: PORT
         value: "8080"
-    healthCheckPath: /api/racquets
+    healthCheckPath: /health
 
   # ── Frontend (Static Site — free) ────────────────────────────────────────────
   - type: web
