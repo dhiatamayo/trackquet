@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"math"
 	"net/http"
 	"strconv"
 	"time"
@@ -15,37 +16,43 @@ import (
 // --- DTOs ---
 
 type CreateRacquetRequest struct {
-	Name           string  `json:"name" binding:"required"`
-	Brand          string  `json:"brand"`
-	Year           int     `json:"year"`
-	HeadSize       float64 `json:"head_size"`
-	Weight         float64 `json:"weight"`
-	StringName     string  `json:"string_name"`
-	Gauge          string  `json:"gauge"`
-	MainTension    float64 `json:"main_tension"`
-	CrossTension   float64 `json:"cross_tension"`
-	ThresholdHours int     `json:"threshold_hours"`
+	Name            string  `json:"name" binding:"required"`
+	Brand           string  `json:"brand"`
+	Year            int     `json:"year"`
+	HeadSize        float64 `json:"head_size"`
+	Weight          float64 `json:"weight"`
+	StringName      string  `json:"string_name"`
+	Gauge           string  `json:"gauge"`
+	CrossStringName string  `json:"cross_string_name"`
+	CrossGauge      string  `json:"cross_gauge"`
+	MainTension     float64 `json:"main_tension"`
+	CrossTension    float64 `json:"cross_tension"`
+	ThresholdHours  int     `json:"threshold_hours"`
 }
 
 type UpdateRacquetRequest struct {
-	Name           string  `json:"name"`
-	Brand          string  `json:"brand"`
-	Year           int     `json:"year"`
-	HeadSize       float64 `json:"head_size"`
-	Weight         float64 `json:"weight"`
-	StringName     string  `json:"string_name"`
-	Gauge          string  `json:"gauge"`
-	MainTension    float64 `json:"main_tension"`
-	CrossTension   float64 `json:"cross_tension"`
-	ThresholdHours int     `json:"threshold_hours"`
+	Name            string  `json:"name"`
+	Brand           string  `json:"brand"`
+	Year            int     `json:"year"`
+	HeadSize        float64 `json:"head_size"`
+	Weight          float64 `json:"weight"`
+	StringName      string  `json:"string_name"`
+	Gauge           string  `json:"gauge"`
+	CrossStringName string  `json:"cross_string_name"`
+	CrossGauge      string  `json:"cross_gauge"`
+	MainTension     float64 `json:"main_tension"`
+	CrossTension    float64 `json:"cross_tension"`
+	ThresholdHours  int     `json:"threshold_hours"`
 }
 
 type RestringRequest struct {
-	StringName     string  `json:"string_name"`
-	Gauge          string  `json:"gauge"`
-	MainTension    float64 `json:"main_tension"`
-	CrossTension   float64 `json:"cross_tension"`
-	ThresholdHours int     `json:"threshold_hours"`
+	StringName      string  `json:"string_name"`
+	Gauge           string  `json:"gauge"`
+	CrossStringName string  `json:"cross_string_name"`
+	CrossGauge      string  `json:"cross_gauge"`
+	MainTension     float64 `json:"main_tension"`
+	CrossTension    float64 `json:"cross_tension"`
+	ThresholdHours  int     `json:"threshold_hours"`
 }
 
 // gaugeDefaultThreshold returns the recommended restring threshold in hours for a given gauge.
@@ -68,6 +75,21 @@ func gaugeDefaultThreshold(gauge string) int {
 		return 12
 	}
 	return 0 // unknown gauge — caller falls back to default
+}
+
+// hybridThreshold computes the recommended threshold for a two-string (hybrid) setup.
+// Main strings absorb ~55% of ball impact stress; cross strings ~45%.
+// Unknown gauge defaults to 20h.
+func hybridThreshold(mainGauge, crossGauge string) int {
+	mainT := gaugeDefaultThreshold(mainGauge)
+	if mainT == 0 {
+		mainT = 20
+	}
+	crossT := gaugeDefaultThreshold(crossGauge)
+	if crossT == 0 {
+		crossT = 20
+	}
+	return int(math.Round(float64(mainT)*0.55 + float64(crossT)*0.45))
 }
 
 type RacquetResponse struct {
@@ -161,7 +183,11 @@ func CreateRacquet(c *gin.Context) {
 	}
 
 	threshold := req.ThresholdHours
-	// Auto-fill threshold: gauge takes priority, then string preset, then default
+	// Auto-fill threshold: hybrid > single gauge > preset > default
+	if threshold == 0 && req.CrossStringName != "" {
+		// Hybrid setup — weighted average of main and cross gauge thresholds
+		threshold = hybridThreshold(req.Gauge, req.CrossGauge)
+	}
 	if threshold == 0 && req.Gauge != "" {
 		threshold = gaugeDefaultThreshold(req.Gauge)
 	}
@@ -176,17 +202,19 @@ func CreateRacquet(c *gin.Context) {
 	}
 
 	racquet := models.Racquet{
-		UserID:         userID,
-		Name:           req.Name,
-		Brand:          req.Brand,
-		Year:           req.Year,
-		HeadSize:       req.HeadSize,
-		Weight:         req.Weight,
-		StringName:     req.StringName,
-		Gauge:          req.Gauge,
-		MainTension:    req.MainTension,
-		CrossTension:   req.CrossTension,
-		ThresholdHours: threshold,
+		UserID:          userID,
+		Name:            req.Name,
+		Brand:           req.Brand,
+		Year:            req.Year,
+		HeadSize:        req.HeadSize,
+		Weight:          req.Weight,
+		StringName:      req.StringName,
+		Gauge:           req.Gauge,
+		CrossStringName: req.CrossStringName,
+		CrossGauge:      req.CrossGauge,
+		MainTension:     req.MainTension,
+		CrossTension:    req.CrossTension,
+		ThresholdHours:  threshold,
 	}
 
 	if err := database.DB.Create(&racquet).Error; err != nil {
@@ -196,13 +224,15 @@ func CreateRacquet(c *gin.Context) {
 
 	// Create the initial StringRecord for this racquet
 	sr := models.StringRecord{
-		RacquetID:      racquet.ID,
-		StringName:     req.StringName,
-		Gauge:          req.Gauge,
-		MainTension:    req.MainTension,
-		CrossTension:   req.CrossTension,
-		ThresholdHours: threshold,
-		StartedAt:      time.Now(),
+		RacquetID:       racquet.ID,
+		StringName:      req.StringName,
+		Gauge:           req.Gauge,
+		CrossStringName: req.CrossStringName,
+		CrossGauge:      req.CrossGauge,
+		MainTension:     req.MainTension,
+		CrossTension:    req.CrossTension,
+		ThresholdHours:  threshold,
+		StartedAt:       time.Now(),
 	}
 	database.DB.Create(&sr)
 
@@ -251,6 +281,10 @@ func UpdateRacquet(c *gin.Context) {
 	if req.Gauge != "" {
 		racquet.Gauge = req.Gauge
 	}
+	// Allow clearing cross string by setting it explicitly to empty via a separate flag;
+	// for now: setting cross_string_name always overwrites (even to empty).
+	racquet.CrossStringName = req.CrossStringName
+	racquet.CrossGauge = req.CrossGauge
 	if req.MainTension > 0 {
 		racquet.MainTension = req.MainTension
 	}
@@ -324,6 +358,8 @@ func RestringRacquet(c *gin.Context) {
 	if newGauge == "" {
 		newGauge = racquet.Gauge
 	}
+	newCrossStringName := req.CrossStringName // empty = no cross (single string)
+	newCrossGauge := req.CrossGauge
 	newMainTension := req.MainTension
 	if newMainTension == 0 {
 		newMainTension = racquet.MainTension
@@ -333,6 +369,10 @@ func RestringRacquet(c *gin.Context) {
 		newCrossTension = racquet.CrossTension
 	}
 	newThreshold := req.ThresholdHours
+	if newThreshold == 0 && newCrossStringName != "" {
+		// Hybrid: weighted average
+		newThreshold = hybridThreshold(newGauge, newCrossGauge)
+	}
 	if newThreshold == 0 && newGauge != "" {
 		newThreshold = gaugeDefaultThreshold(newGauge)
 	}
@@ -351,6 +391,8 @@ func RestringRacquet(c *gin.Context) {
 	// Update racquet with new string config and reset the usage counter
 	racquet.StringName = newStringName
 	racquet.Gauge = newGauge
+	racquet.CrossStringName = newCrossStringName
+	racquet.CrossGauge = newCrossGauge
 	racquet.MainTension = newMainTension
 	racquet.CrossTension = newCrossTension
 	racquet.ThresholdHours = newThreshold
@@ -359,13 +401,15 @@ func RestringRacquet(c *gin.Context) {
 
 	// Create new active StringRecord
 	newRecord := models.StringRecord{
-		RacquetID:      racquet.ID,
-		StringName:     newStringName,
-		Gauge:          newGauge,
-		MainTension:    newMainTension,
-		CrossTension:   newCrossTension,
-		ThresholdHours: newThreshold,
-		StartedAt:      now,
+		RacquetID:       racquet.ID,
+		StringName:      newStringName,
+		Gauge:           newGauge,
+		CrossStringName: newCrossStringName,
+		CrossGauge:      newCrossGauge,
+		MainTension:     newMainTension,
+		CrossTension:    newCrossTension,
+		ThresholdHours:  newThreshold,
+		StartedAt:       now,
 	}
 	database.DB.Create(&newRecord)
 

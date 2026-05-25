@@ -25,6 +25,15 @@ export default function RacquetDetail() {
   const [stringRecords, setStringRecords] = useState<StringRecord[]>([])
   const [expandedRecord, setExpandedRecord] = useState<number | null>(null)
 
+  // Compose display name for single or hybrid string setups
+  const displayStringName = (name: string, gauge: string, crossName?: string, crossGauge?: string) => {
+    if (!name) return null
+    const main = gauge && gauge !== 'Unknown' ? `${name} ${gauge}` : name
+    if (!crossName) return main
+    const cross = crossGauge && crossGauge !== 'Unknown' ? `${crossName} ${crossGauge}` : crossName
+    return `${main} X ${cross}`
+  }
+
   const load = () => {
     fetchRacquet(Number(id))
       .then((data) => {
@@ -116,7 +125,7 @@ export default function RacquetDetail() {
             <div className="flex flex-wrap gap-2 mt-3 text-xs">
               {racquet.string_name && (
                 <span className="bg-court-50 border border-court-200 text-court-800 px-3 py-1 rounded-full font-medium">
-                  🔗 {racquet.string_name}{racquet.gauge ? ` · ${racquet.gauge}` : ''}
+                  🔗 {displayStringName(racquet.string_name, racquet.gauge, racquet.cross_string_name, racquet.cross_gauge)}
                 </span>
               )}
               {racquet.main_tension > 0 && (
@@ -244,7 +253,7 @@ export default function RacquetDetail() {
                       <div className="flex items-center gap-2 flex-wrap">
                         {isActive && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Active</span>}
                         {i === 0 && !isActive && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Latest</span>}
-                        <span className="font-medium text-sm text-gray-900">{rec.string_name || 'Unknown String'}</span>
+                        <span className="font-medium text-sm text-gray-900">{displayStringName(rec.string_name, rec.gauge, rec.cross_string_name, rec.cross_gauge) || 'Unknown String'}</span>
                         {usagePct !== null && (
                           <span className={`text-xs font-semibold ${usageColor}`}>
                             {usagePct.toFixed(0)}% · {totalHours}h/{rec.threshold_hours}h
@@ -303,6 +312,8 @@ export default function RacquetDetail() {
         <RestringModal
           currentStringName={racquet.string_name ?? ''}
           currentGauge={racquet.gauge ?? ''}
+          currentCrossStringName={racquet.cross_string_name ?? ''}
+          currentCrossGauge={racquet.cross_gauge ?? ''}
           currentMainTension={racquet.main_tension}
           currentCrossTension={racquet.cross_tension}
           currentThreshold={racquet.threshold_hours}

@@ -12,6 +12,8 @@ interface Props {
     weight: number
     stringName: string
     gauge: string
+    crossStringName: string
+    crossGauge: string
     mainTension: number
     crossTension: number
     thresholdHours: number
@@ -19,10 +21,16 @@ interface Props {
   loading?: boolean
 }
 
-const GAUGES = ['15', '15L', '16', '16L', '17', '17L', '18'] as const
+const GAUGES = ['15', '15L', '16', '16L', '17', '17L', '18', 'Unknown'] as const
 
 const GAUGE_DEFAULTS: Record<string, number> = {
-  '15': 25, '15L': 22, '16': 20, '16L': 18, '17': 16, '17L': 14, '18': 12,
+  '15': 25, '15L': 22, '16': 20, '16L': 18, '17': 16, '17L': 14, '18': 12, 'Unknown': 20,
+}
+
+function hybridThreshold(mainGauge: string, crossGauge: string): number {
+  const m = GAUGE_DEFAULTS[mainGauge] ?? 20
+  const c = GAUGE_DEFAULTS[crossGauge] ?? 20
+  return Math.round(m * 0.55 + c * 0.45)
 }
 
 export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
@@ -31,50 +39,70 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
   const [year, setYear] = useState('')
   const [headSize, setHeadSize] = useState('')
   const [weight, setWeight] = useState('')
+  // Main string
   const [stringName, setStringName] = useState('')
   const [customString, setCustomString] = useState('')
   const [gauge, setGauge] = useState('')
+  // Cross string (hybrid)
+  const [isHybrid, setIsHybrid] = useState(false)
+  const [crossStringName, setCrossStringName] = useState('')
+  const [customCrossString, setCustomCrossString] = useState('')
+  const [crossGauge, setCrossGauge] = useState('')
+  // Tensions & threshold
   const [mainTension, setMainTension] = useState('')
   const [crossTension, setCrossTension] = useState('')
   const [thresholdHours, setThresholdHours] = useState('')
   const [presets, setPresets] = useState<StringPreset[]>([])
-  const [autoThreshold, setAutoThreshold] = useState(0)
 
   useEffect(() => {
     fetchStringPresets().then(setPresets).catch(() => {})
   }, [])
 
+  // Auto-compute threshold whenever gauge/hybrid/crossGauge changes
+  const autoThreshold = (() => {
+    if (isHybrid && gauge && crossGauge) return hybridThreshold(gauge, crossGauge)
+    if (gauge) return GAUGE_DEFAULTS[gauge] ?? 20
+    const preset = presets.find((p) => p.name === (stringName === '__custom__' ? '' : stringName))
+    return preset?.threshold_hours ?? 20
+  })()
+
   const handleStringChange = (val: string) => {
     setStringName(val)
-    const preset = presets.find((p) => p.name === val)
-    if (preset) {
-      setAutoThreshold(preset.threshold_hours)
-      if (!thresholdHours) setThresholdHours(String(preset.threshold_hours))
+    if (val !== '__custom__') {
+      const preset = presets.find((p) => p.name === val)
+      if (preset && !thresholdHours) setThresholdHours(String(preset.threshold_hours))
     }
   }
 
   const handleGaugeChange = (val: string) => {
-    setGauge(val)
-    if (val && !thresholdHours) {
-      const gaugeDefault = GAUGE_DEFAULTS[val]
-      if (gaugeDefault) setAutoThreshold(gaugeDefault)
-    }
+    setGauge(val === gauge ? '' : val)
+    setThresholdHours('') // let auto-threshold recalculate
+  }
+
+  const handleCrossGaugeChange = (val: string) => {
+    setCrossGauge(val === crossGauge ? '' : val)
+    setThresholdHours('')
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const gaugeDefault = gauge ? (GAUGE_DEFAULTS[gauge] ?? 20) : 0
+    const mainStr = stringName === '__custom__' ? customString : stringName
+    const crossStr = isHybrid ? (crossStringName === '__custom__' ? customCrossString : crossStringName) : ''
+    const cg = isHybrid ? crossGauge : ''
+    const finalThreshold = parseInt(thresholdHours) || autoThreshold
     onSave({
       name,
       brand,
       year: parseInt(year) || 0,
       headSize: parseFloat(headSize) || 0,
       weight: parseFloat(weight) || 0,
-      stringName: stringName === '__custom__' ? customString : stringName,
+      stringName: mainStr,
       gauge,
+      crossStringName: crossStr,
+      crossGauge: cg,
       mainTension: parseFloat(mainTension) || 0,
       crossTension: parseFloat(crossTension) || 0,
-      thresholdHours: parseInt(thresholdHours) || autoThreshold || gaugeDefault || 20,
+      thresholdHours: finalThreshold,
     })
   }
 
@@ -152,93 +180,96 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
             </div>
           </div>
 
-          {/* String name */}
-          <div>
-            <label className="label">String</label>
-            <select
-              className="input"
-              value={stringName}
-              onChange={(e) => handleStringChange(e.target.value)}
+          {/* Hybrid toggle */}
+          <div className="flex items-center gap-3 py-1">
+            <button
+              type="button"
+              onClick={() => { setIsHybrid(!isHybrid); setThresholdHours('') }}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isHybrid ? 'bg-court-600' : 'bg-gray-200'}`}
             >
-              <option value="">Select a string (optional)</option>
-              {presets.map((p) => (
-                <option key={p.id} value={p.name}>
-                  {p.name} ({p.brand}) — {p.threshold_hours}h threshold
-                </option>
-              ))}
-              <option value="__custom__">Custom / Other…</option>
-            </select>
+              <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isHybrid ? 'translate-x-6' : 'translate-x-1'}`} />
+            </button>
+            <span className="text-sm font-medium text-gray-700">Hybrid setup (two different strings)</span>
           </div>
 
-          {stringName === '__custom__' && (
+          {/* Main string */}
+          <div className="rounded-xl border border-gray-200 p-4 space-y-3">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{isHybrid ? 'Main Strings' : 'String'}</p>
             <div>
-              <label className="label">Custom String Name</label>
-              <input
-                className="input"
-                value={customString}
-                onChange={(e) => setCustomString(e.target.value)}
-                placeholder="e.g. Dunlop Black Widow"
-              />
+              <label className="label">String Name</label>
+              <select className="input" value={stringName} onChange={(e) => handleStringChange(e.target.value)}>
+                <option value="">Select a string (optional)</option>
+                {presets.map((p) => (
+                  <option key={p.id} value={p.name}>{p.name} ({p.brand}) — {p.threshold_hours}h</option>
+                ))}
+                <option value="__custom__">Custom / Other…</option>
+              </select>
+            </div>
+            {stringName === '__custom__' && (
+              <input className="input" value={customString} onChange={(e) => setCustomString(e.target.value)} placeholder="e.g. Dunlop Black Widow" />
+            )}
+            <div>
+              <label className="label">Gauge</label>
+              <div className="flex flex-wrap gap-2">
+                {GAUGES.map((g) => (
+                  <button key={g} type="button" onClick={() => handleGaugeChange(g)}
+                    className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${gauge === g ? 'bg-court-600 text-white border-court-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                    {g}
+                    {gauge !== g && <span className="ml-1 text-xs opacity-60">{GAUGE_DEFAULTS[g]}h</span>}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Cross string (hybrid only) */}
+          {isHybrid && (
+            <div className="rounded-xl border border-court-200 bg-court-50/40 p-4 space-y-3">
+              <p className="text-xs font-semibold text-court-700 uppercase tracking-wide">Cross Strings</p>
+              <div>
+                <label className="label">String Name</label>
+                <select className="input" value={crossStringName} onChange={(e) => { setCrossStringName(e.target.value); setThresholdHours('') }}>
+                  <option value="">Select a string (optional)</option>
+                  {presets.map((p) => (
+                    <option key={p.id} value={p.name}>{p.name} ({p.brand}) — {p.threshold_hours}h</option>
+                  ))}
+                  <option value="__custom__">Custom / Other…</option>
+                </select>
+              </div>
+              {crossStringName === '__custom__' && (
+                <input className="input" value={customCrossString} onChange={(e) => setCustomCrossString(e.target.value)} placeholder="e.g. Babolat VS Touch" />
+              )}
+              <div>
+                <label className="label">Gauge</label>
+                <div className="flex flex-wrap gap-2">
+                  {GAUGES.map((g) => (
+                    <button key={g} type="button" onClick={() => handleCrossGaugeChange(g)}
+                      className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${crossGauge === g ? 'bg-court-600 text-white border-court-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                      {g}
+                      {crossGauge !== g && <span className="ml-1 text-xs opacity-60">{GAUGE_DEFAULTS[g]}h</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {gauge && crossGauge && (
+                <p className="text-xs text-court-700 font-medium">
+                  ⚡ Hybrid threshold auto-set to {hybridThreshold(gauge, crossGauge)}h
+                  <span className="text-gray-400 font-normal ml-1">(main {GAUGE_DEFAULTS[gauge]}h × 55% + cross {GAUGE_DEFAULTS[crossGauge]}h × 45%)</span>
+                </p>
+              )}
             </div>
           )}
-
-          {/* Gauge */}
-          <div>
-            <label className="label">String Gauge</label>
-            <div className="flex flex-wrap gap-2">
-              {GAUGES.map((g) => (
-                <button
-                  key={g}
-                  type="button"
-                  onClick={() => handleGaugeChange(gauge === g ? '' : g)}
-                  className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${
-                    gauge === g
-                      ? 'bg-court-600 text-white border-court-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
-                  }`}
-                >
-                  {g}
-                  {GAUGE_DEFAULTS[g] && gauge !== g && (
-                    <span className="ml-1 text-xs opacity-60">{GAUGE_DEFAULTS[g]}h</span>
-                  )}
-                </button>
-              ))}
-            </div>
-            {gauge && (
-              <p className="text-xs text-court-600 mt-1.5">
-                Gauge {gauge} → suggested threshold: {GAUGE_DEFAULTS[gauge]}h
-              </p>
-            )}
-          </div>
 
           {/* Main & Cross Tension */}
           <div>
             <label className="label">String Tension (lbs)</label>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <input
-                  type="number"
-                  className="input"
-                  value={mainTension}
-                  onChange={(e) => setMainTension(e.target.value)}
-                  placeholder="Main (e.g. 52)"
-                  min="20"
-                  max="80"
-                  step="0.5"
-                />
+                <input type="number" className="input" value={mainTension} onChange={(e) => setMainTension(e.target.value)} placeholder="Main (e.g. 52)" min="20" max="80" step="0.5" />
                 <p className="text-xs text-gray-400 mt-1 text-center">Main</p>
               </div>
               <div>
-                <input
-                  type="number"
-                  className="input"
-                  value={crossTension}
-                  onChange={(e) => setCrossTension(e.target.value)}
-                  placeholder="Cross (e.g. 50)"
-                  min="20"
-                  max="80"
-                  step="0.5"
-                />
+                <input type="number" className="input" value={crossTension} onChange={(e) => setCrossTension(e.target.value)} placeholder="Cross (e.g. 50)" min="20" max="80" step="0.5" />
                 <p className="text-xs text-gray-400 mt-1 text-center">Cross</p>
               </div>
             </div>
@@ -248,10 +279,8 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
           <div>
             <label className="label">
               Restring Threshold (hours)
-              {(autoThreshold > 0 || (gauge && !thresholdHours)) && !thresholdHours && (
-                <span className="ml-1 text-court-600 text-xs">
-                  (auto: {autoThreshold || GAUGE_DEFAULTS[gauge] || 20}h)
-                </span>
+              {!thresholdHours && (
+                <span className="ml-1 text-court-600 text-xs">(auto: {autoThreshold}h)</span>
               )}
             </label>
             <input
@@ -259,7 +288,7 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
               className="input"
               value={thresholdHours}
               onChange={(e) => setThresholdHours(e.target.value)}
-              placeholder={String(autoThreshold || 20)}
+              placeholder={String(autoThreshold)}
               min="1"
               max="200"
             />

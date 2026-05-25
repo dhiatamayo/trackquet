@@ -9,8 +9,10 @@ type StringRecord struct {
 	ID             uint       `gorm:"primaryKey" json:"id"`
 	CreatedAt      time.Time  `json:"created_at"`
 	RacquetID      uint       `gorm:"not null;index" json:"racquet_id"`
-	StringName     string     `json:"string_name"`
-	Gauge          string     `json:"gauge"` // e.g. "16", "16L", "17", "17L", "18"
+	StringName      string     `json:"string_name"`
+	Gauge           string     `json:"gauge"`             // main gauge e.g. "16", "17"
+	CrossStringName string     `json:"cross_string_name"` // cross string name (hybrid only)
+	CrossGauge      string     `json:"cross_gauge"`       // cross gauge (hybrid only)
 	MainTension    float64    `json:"main_tension"`
 	CrossTension   float64    `json:"cross_tension"`
 	ThresholdHours int        `json:"threshold_hours"`

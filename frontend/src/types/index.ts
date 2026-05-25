@@ -37,6 +37,8 @@ export interface StringRecord {
   racquet_id: number
   string_name: string
   gauge: string
+  cross_string_name?: string
+  cross_gauge?: string
   main_tension: number
   cross_tension: number
   threshold_hours: number
@@ -57,6 +59,8 @@ export interface Racquet {
   weight: number
   string_name: string
   gauge: string
+  cross_string_name?: string
+  cross_gauge?: string
   main_tension: number
   cross_tension: number
   threshold_hours: number
@@ -90,6 +94,8 @@ export interface CreateRacquetPayload {
   weight?: number
   string_name?: string
   gauge?: string
+  cross_string_name?: string
+  cross_gauge?: string
   main_tension?: number
   cross_tension?: number
   threshold_hours?: number
@@ -107,6 +113,8 @@ export interface CreateSessionPayload {
 export interface RestringPayload {
   string_name?: string
   gauge?: string
+  cross_string_name?: string
+  cross_gauge?: string
   main_tension?: number
   cross_tension?: number
   threshold_hours?: number

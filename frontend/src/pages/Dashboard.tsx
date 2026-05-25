@@ -30,6 +30,8 @@ export default function Dashboard() {
     weight: number
     stringName: string
     gauge: string
+    crossStringName: string
+    crossGauge: string
     mainTension: number
     crossTension: number
     thresholdHours: number
@@ -44,6 +46,8 @@ export default function Dashboard() {
         weight: data.weight,
         string_name: data.stringName,
         gauge: data.gauge,
+        cross_string_name: data.crossStringName,
+        cross_gauge: data.crossGauge,
         main_tension: data.mainTension,
         cross_tension: data.crossTension,
         threshold_hours: data.thresholdHours,
