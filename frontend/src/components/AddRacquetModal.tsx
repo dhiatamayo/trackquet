@@ -107,7 +107,8 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 overflow-y-auto py-8">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40">
+      <div className="flex min-h-full items-center justify-center px-4 py-8">
       <div className="card w-full max-w-lg p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="text-lg font-bold">Add New Racquet</h2>
@@ -303,6 +304,7 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
             </button>
           </div>
         </form>
+      </div>
       </div>
     </div>
   )
