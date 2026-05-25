@@ -1,5 +1,29 @@
 export type SessionType = 'match' | 'training'
 
+export interface User {
+  id: number
+  name: string
+  username: string
+  email: string
+}
+
+export interface AuthResponse {
+  token: string
+  user: User
+}
+
+export interface LoginPayload {
+  username: string
+  password: string
+}
+
+export interface RegisterPayload {
+  name: string
+  username: string
+  email: string
+  password: string
+}
+
 export interface StringPreset {
   id: number
   name: string

@@ -33,7 +33,7 @@ func Init(dsn string) {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	err = DB.AutoMigrate(&models.Racquet{}, &models.StringRecord{}, &models.Session{}, &models.StringPreset{})
+	err = DB.AutoMigrate(&models.User{}, &models.Racquet{}, &models.StringRecord{}, &models.Session{}, &models.StringPreset{})
 	if err != nil {
 		log.Fatalf("failed to migrate database: %v", err)
 	}

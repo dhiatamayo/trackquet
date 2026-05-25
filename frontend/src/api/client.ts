@@ -4,6 +4,10 @@ import type {
   Session,
   StringPreset,
   StringRecord,
+  User,
+  AuthResponse,
+  LoginPayload,
+  RegisterPayload,
   CreateRacquetPayload,
   CreateSessionPayload,
   RestringPayload,
@@ -13,6 +17,23 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api',
   headers: { 'Content-Type': 'application/json' },
 })
+
+// Attach JWT token from localStorage to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token')
+  if (token) config.headers.Authorization = `Bearer ${token}`
+  return config
+})
+
+// --- Auth ---
+export const loginUser = (payload: LoginPayload): Promise<AuthResponse> =>
+  api.post<AuthResponse>('/auth/login', payload).then((r) => r.data)
+
+export const registerUser = (payload: RegisterPayload): Promise<AuthResponse> =>
+  api.post<AuthResponse>('/auth/register', payload).then((r) => r.data)
+
+export const fetchMe = (): Promise<User> =>
+  api.get<User>('/auth/me').then((r) => r.data)
 
 // --- Racquets ---
 export const fetchRacquets = (): Promise<Racquet[]> =>

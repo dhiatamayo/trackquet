@@ -110,8 +110,9 @@ func toRacquetResponse(r models.Racquet) RacquetResponse {
 
 // GET /api/racquets
 func ListRacquets(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
 	var racquets []models.Racquet
-	database.DB.Preload("StringRecords").Find(&racquets)
+	database.DB.Preload("StringRecords").Where("user_id = ?", userID).Find(&racquets)
 
 	resp := make([]RacquetResponse, len(racquets))
 	for i, r := range racquets {
@@ -122,6 +123,7 @@ func ListRacquets(c *gin.Context) {
 
 // GET /api/racquets/:id
 func GetRacquet(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -129,7 +131,7 @@ func GetRacquet(c *gin.Context) {
 	}
 
 	var racquet models.Racquet
-	result := database.DB.Preload("Sessions").Preload("StringRecords").First(&racquet, id)
+	result := database.DB.Preload("Sessions").Preload("StringRecords").Where("id = ? AND user_id = ?", id, userID).First(&racquet)
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "racquet not found"})
@@ -143,6 +145,7 @@ func GetRacquet(c *gin.Context) {
 
 // POST /api/racquets
 func CreateRacquet(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
 	var req CreateRacquetRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -165,6 +168,7 @@ func CreateRacquet(c *gin.Context) {
 	}
 
 	racquet := models.Racquet{
+		UserID:         userID,
 		Name:           req.Name,
 		Brand:          req.Brand,
 		Year:           req.Year,
@@ -199,6 +203,7 @@ func CreateRacquet(c *gin.Context) {
 
 // PUT /api/racquets/:id
 func UpdateRacquet(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -206,7 +211,7 @@ func UpdateRacquet(c *gin.Context) {
 	}
 
 	var racquet models.Racquet
-	if err := database.DB.First(&racquet, id).Error; err != nil {
+	if err := database.DB.Where("id = ? AND user_id = ?", id, userID).First(&racquet).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "racquet not found"})
 		return
 	}
@@ -254,13 +259,14 @@ func UpdateRacquet(c *gin.Context) {
 
 // DELETE /api/racquets/:id
 func DeleteRacquet(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
 		return
 	}
 
-	if err := database.DB.Delete(&models.Racquet{}, id).Error; err != nil {
+	if err := database.DB.Where("id = ? AND user_id = ?", id, userID).Delete(&models.Racquet{}).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -270,6 +276,7 @@ func DeleteRacquet(c *gin.Context) {
 // POST /api/racquets/:id/restring
 // Archives the current string record and starts a fresh one with a new string config.
 func RestringRacquet(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
@@ -277,7 +284,7 @@ func RestringRacquet(c *gin.Context) {
 	}
 
 	var racquet models.Racquet
-	if err := database.DB.First(&racquet, id).Error; err != nil {
+	if err := database.DB.Where("id = ? AND user_id = ?", id, userID).First(&racquet).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "racquet not found"})
 		return
 	}

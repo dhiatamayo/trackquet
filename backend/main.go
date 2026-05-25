@@ -7,6 +7,7 @@ import (
 
 	"trackquet/database"
 	"trackquet/handlers"
+	"trackquet/middleware"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -36,24 +37,36 @@ func main() {
 
 	api := r.Group("/api")
 	{
-		// Racquets
-		api.GET("/racquets", handlers.ListRacquets)
-		api.POST("/racquets", handlers.CreateRacquet)
-		api.GET("/racquets/:id", handlers.GetRacquet)
-		api.PUT("/racquets/:id", handlers.UpdateRacquet)
-		api.DELETE("/racquets/:id", handlers.DeleteRacquet)
-		api.POST("/racquets/:id/restring", handlers.RestringRacquet)
+		// Auth (public)
+		api.POST("/auth/register", handlers.Register)
+		api.POST("/auth/login", handlers.Login)
 
-		// Sessions (nested under racquet)
-		api.GET("/racquets/:id/sessions", handlers.ListSessions)
-		api.POST("/racquets/:id/sessions", handlers.CreateSession)
-		api.DELETE("/racquets/:id/sessions/:sessionID", handlers.DeleteSession)
+		// All routes below require a valid JWT
+		protected := api.Group("/")
+		protected.Use(middleware.RequireAuth)
+		{
+			// Current user
+			protected.GET("/auth/me", handlers.Me)
 
-		// String records (history)
-		api.GET("/racquets/:id/string-records", handlers.ListStringRecords)
+			// Racquets
+			protected.GET("/racquets", handlers.ListRacquets)
+			protected.POST("/racquets", handlers.CreateRacquet)
+			protected.GET("/racquets/:id", handlers.GetRacquet)
+			protected.PUT("/racquets/:id", handlers.UpdateRacquet)
+			protected.DELETE("/racquets/:id", handlers.DeleteRacquet)
+			protected.POST("/racquets/:id/restring", handlers.RestringRacquet)
 
-		// String presets
-		api.GET("/string-presets", handlers.ListStringPresets)
+			// Sessions (nested under racquet)
+			protected.GET("/racquets/:id/sessions", handlers.ListSessions)
+			protected.POST("/racquets/:id/sessions", handlers.CreateSession)
+			protected.DELETE("/racquets/:id/sessions/:sessionID", handlers.DeleteSession)
+
+			// String records (history)
+			protected.GET("/racquets/:id/string-records", handlers.ListStringRecords)
+
+			// String presets (public-ish but fine behind auth)
+			protected.GET("/string-presets", handlers.ListStringPresets)
+		}
 	}
 
 	port := os.Getenv("PORT")

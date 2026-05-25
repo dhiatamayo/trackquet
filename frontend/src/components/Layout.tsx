@@ -1,5 +1,6 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { ReactNode } from 'react'
+import { useAuth } from '../context/AuthContext'
 
 interface Props {
   children: ReactNode
@@ -7,7 +8,14 @@ interface Props {
 
 export default function Layout({ children }: Props) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { user, logout } = useAuth()
   const isHome = location.pathname === '/'
+
+  const handleLogout = () => {
+    logout()
+    navigate('/login', { replace: true })
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -21,6 +29,19 @@ export default function Layout({ children }: Props) {
           <span className="ml-2 text-court-200 text-sm hidden sm:inline">
             Tennis Racquet Usage Tracker
           </span>
+          <div className="ml-auto flex items-center gap-3">
+            {user && (
+              <span className="text-sm text-court-200 hidden sm:inline">
+                Hi, <span className="text-white font-medium">{user.name}</span>
+              </span>
+            )}
+            <button
+              onClick={handleLogout}
+              className="text-xs bg-court-600 hover:bg-court-500 px-3 py-1.5 rounded-lg transition-colors"
+            >
+              Sign out
+            </button>
+          </div>
         </div>
       </header>
 
