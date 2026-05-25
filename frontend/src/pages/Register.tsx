@@ -22,8 +22,13 @@ export default function Register() {
       toast.success(`Welcome, ${user.name}! 🎾`)
       navigate('/', { replace: true })
     } catch (err: unknown) {
-      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error
-      toast.error(msg ?? 'Registration failed')
+      console.error('[Register] error:', err)
+      const axiosErr = err as { response?: { data?: { error?: string } }; message?: string }
+      const msg =
+        axiosErr?.response?.data?.error ??
+        (axiosErr?.message?.includes('Network') ? 'Cannot reach server — check your connection' : axiosErr?.message) ??
+        'Registration failed'
+      toast.error(msg)
     } finally {
       setLoading(false)
     }

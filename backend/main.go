@@ -26,14 +26,30 @@ func main() {
 	// CORS — allow frontend dev server + production origin
 	allowedOrigins := []string{"http://localhost:5173", "http://localhost:3000"}
 	if envOrigins := os.Getenv("ALLOWED_ORIGINS"); envOrigins != "" {
-		allowedOrigins = strings.Split(envOrigins, ",")
+		if envOrigins == "*" {
+			// Wildcard: allow any origin (useful for debugging — don't use in production long-term)
+			allowedOrigins = []string{"*"}
+		} else {
+			allowedOrigins = strings.Split(envOrigins, ",")
+		}
 	}
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     allowedOrigins,
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		AllowCredentials: true,
-	}))
+	log.Printf("CORS allowed origins: %v", allowedOrigins)
+	corsConfig := cors.Config{
+		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders: []string{"Origin", "Content-Type", "Accept", "Authorization"},
+	}
+	if len(allowedOrigins) == 1 && allowedOrigins[0] == "*" {
+		corsConfig.AllowAllOrigins = true
+	} else {
+		corsConfig.AllowOrigins = allowedOrigins
+		corsConfig.AllowCredentials = true
+	}
+	r.Use(cors.New(corsConfig))
+
+	// Public health check (used by Render)
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
 
 	api := r.Group("/api")
 	{
