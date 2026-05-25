@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"time"
 
@@ -34,24 +35,29 @@ type AuthResponse struct {
 func Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("[Register] bind error: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+	log.Printf("[Register] attempt: username=%s email=%s", req.Username, req.Email)
 
 	// Check username taken
 	var existing models.User
 	if err := database.DB.Where("username = ?", req.Username).First(&existing).Error; err == nil {
+		log.Printf("[Register] username taken: %s", req.Username)
 		c.JSON(http.StatusConflict, gin.H{"error": "username already taken"})
 		return
 	}
 	// Check email taken
 	if err := database.DB.Where("email = ?", req.Email).First(&existing).Error; err == nil {
+		log.Printf("[Register] email taken: %s", req.Email)
 		c.JSON(http.StatusConflict, gin.H{"error": "email already registered"})
 		return
 	}
 
 	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
+		log.Printf("[Register] bcrypt error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not hash password"})
 		return
 	}
@@ -63,16 +69,19 @@ func Register(c *gin.Context) {
 		Password: string(hash),
 	}
 	if err := database.DB.Create(&user).Error; err != nil {
+		log.Printf("[Register] db create error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create user"})
 		return
 	}
 
 	token, err := generateToken(user.ID)
 	if err != nil {
+		log.Printf("[Register] token error: %v", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not generate token"})
 		return
 	}
 
+	log.Printf("[Register] success: userID=%d username=%s", user.ID, user.Username)
 	c.JSON(http.StatusCreated, AuthResponse{Token: token, User: user})
 }
 
