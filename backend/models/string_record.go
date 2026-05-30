@@ -6,20 +6,20 @@ import "time"
 // A new record is created when a racquet is first registered or restrung.
 // When restrung, the current record is archived (EndedAt set) and a new one begins.
 type StringRecord struct {
-	ID             uint       `gorm:"primaryKey" json:"id"`
-	CreatedAt      time.Time  `json:"created_at"`
-	RacquetID      uint       `gorm:"not null;index" json:"racquet_id"`
+	ID              uint       `gorm:"primaryKey" json:"id"`
+	CreatedAt       time.Time  `json:"created_at"`
+	RacquetID       uint       `gorm:"not null;index" json:"racquet_id"`
 	StringName      string     `json:"string_name"`
 	Gauge           string     `json:"gauge"`             // main gauge e.g. "16", "17"
 	CrossStringName string     `json:"cross_string_name"` // cross string name (hybrid only)
 	CrossGauge      string     `json:"cross_gauge"`       // cross gauge (hybrid only)
-	MainTension    float64    `json:"main_tension"`
-	CrossTension   float64    `json:"cross_tension"`
-	ThresholdHours int        `json:"threshold_hours"`
-	StartedAt      time.Time  `json:"started_at"`
-	EndedAt        *time.Time `json:"ended_at"`      // nil = currently active
-	TotalMinutes   int        `json:"total_minutes"` // accumulated minutes for this string period
-	Sessions       []Session  `gorm:"foreignKey:StringRecordID" json:"sessions,omitempty"`
+	MainTension     float64    `json:"main_tension"`
+	CrossTension    float64    `json:"cross_tension"`
+	ThresholdHours  int        `json:"threshold_hours"`
+	StartedAt       time.Time  `json:"started_at"`
+	EndedAt         *time.Time `json:"ended_at"`      // nil = currently active
+	TotalMinutes    int        `json:"total_minutes"` // accumulated minutes for this string period
+	Sessions        []Session  `gorm:"foreignKey:StringRecordID" json:"sessions,omitempty"`
 }
 
 // IsActive returns true if this string record is the current one

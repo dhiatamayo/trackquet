@@ -152,7 +152,7 @@ func TestCreateSession_StringRecordAfterRetired(t *testing.T) {
 	database.DB.Where("racquet_id = ?", rq.ID).First(&sr)
 
 	body := fmt.Sprintf(
-		`{"date":"2026-05-25","duration_min":60,"type":"training","string_record_id":%d}`, sr.ID)
+		`{"date":"2099-12-31","duration_min":60,"type":"training","string_record_id":%d}`, sr.ID)
 	w := testhelper.Do(r, testhelper.ReqAuth("POST",
 		fmt.Sprintf("/api/racquets/%d/sessions", rq.ID), body, uid))
 	assert.Equal(t, http.StatusBadRequest, w.Code)

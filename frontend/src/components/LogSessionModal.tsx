@@ -13,6 +13,9 @@ interface Props {
     name: string
     notes: string
     stringRecordId?: number
+    matchResult?: 'win' | 'loss' | ''
+    matchScore?: string
+    opponentRacquet?: string
   }) => void
   loading?: boolean
 }
@@ -26,6 +29,9 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
   const [type, setType] = useState<SessionType>('training')
   const [name, setName] = useState('')
   const [notes, setNotes] = useState('')
+  const [matchResult, setMatchResult] = useState<'win' | 'loss' | ''>('')
+  const [matchScore, setMatchScore] = useState('')
+  const [opponentRacquet, setOpponentRacquet] = useState('')
 
   const selectedRecord = useMemo(
     () => stringRecords.find((r) => r.id === selectedRecordId),
@@ -56,7 +62,7 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
     e.preventDefault()
     if (dateError) return
     const totalMin = Math.max(1, parseInt(hours || '0') * 60 + parseInt(minutes || '0'))
-    onSave({ date, durationMin: totalMin, type, name, notes, stringRecordId: selectedRecordId })
+    onSave({ date, durationMin: totalMin, type, name, notes, stringRecordId: selectedRecordId, matchResult, matchScore, opponentRacquet })
   }
 
   return (
@@ -203,6 +209,55 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
               placeholder="How did it go? String feedback, conditions..."
             />
           </div>
+
+          {/* Match-specific fields */}
+          {type === 'match' && (
+            <div className="space-y-3 border border-amber-200 bg-amber-50 rounded-xl p-4">
+              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Match Details</p>
+
+              <div>
+                <label className="label">Result</label>
+                <div className="flex gap-2">
+                  {(['win', 'loss'] as const).map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => setMatchResult(matchResult === r ? '' : r)}
+                      className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        matchResult === r
+                          ? r === 'win'
+                            ? 'bg-green-600 text-white border-green-600'
+                            : 'bg-red-600 text-white border-red-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {r === 'win' ? '🏅 Win' : '😤 Loss'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="label">Score (optional)</label>
+                <input
+                  className="input"
+                  value={matchScore}
+                  onChange={(e) => setMatchScore(e.target.value)}
+                  placeholder="e.g. 6-3, 7-5"
+                />
+              </div>
+
+              <div>
+                <label className="label">Opponent's Racquet (optional)</label>
+                <input
+                  className="input"
+                  value={opponentRacquet}
+                  onChange={(e) => setOpponentRacquet(e.target.value)}
+                  placeholder="e.g. Babolat Pure Drive 16"
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-3 pt-2">
             <button type="submit" className="btn-primary flex-1" disabled={loading || !!dateError}>

@@ -99,6 +99,9 @@ type RacquetResponse struct {
 	NeedsRestring      bool    `json:"needs_restring"`
 	RestringSuggestion string  `json:"restring_suggestion"`
 	UsagePercent       float64 `json:"usage_percent"`
+	WinRatio           float64 `json:"win_ratio"`    // percentage of match sessions that are wins
+	TotalMatches       int     `json:"total_matches"` // all-time match session count
+	WinMatches         int     `json:"win_matches"`   // all-time win count
 }
 
 func toRacquetResponse(r models.Racquet) RacquetResponse {
@@ -120,6 +123,22 @@ func toRacquetResponse(r models.Racquet) RacquetResponse {
 	} else {
 		lifetimeMin = r.TotalMinutes
 	}
+
+	// Win ratio across all match sessions (all string records, all time)
+	var totalMatches, winMatches int64
+	database.DB.Model(&models.Session{}).
+		Where("racquet_id = ? AND type = ?", r.ID, models.SessionMatch).
+		Count(&totalMatches)
+	if totalMatches > 0 {
+		database.DB.Model(&models.Session{}).
+			Where("racquet_id = ? AND type = ? AND match_result = ?", r.ID, models.SessionMatch, models.MatchWin).
+			Count(&winMatches)
+	}
+	winRatio := 0.0
+	if totalMatches > 0 {
+		winRatio = float64(winMatches) / float64(totalMatches) * 100
+	}
+
 	return RacquetResponse{
 		Racquet:            r,
 		TotalHours:         r.TotalHours(),
@@ -127,6 +146,9 @@ func toRacquetResponse(r models.Racquet) RacquetResponse {
 		NeedsRestring:      r.NeedsRestring(),
 		RestringSuggestion: r.RestringSuggestion(),
 		UsagePercent:       pct,
+		WinRatio:           winRatio,
+		TotalMatches:       int(totalMatches),
+		WinMatches:         int(winMatches),
 	}
 }
 
