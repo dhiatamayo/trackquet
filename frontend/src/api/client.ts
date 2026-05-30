@@ -10,6 +10,7 @@ import type {
   RegisterPayload,
   CreateRacquetPayload,
   CreateSessionPayload,
+  UpdateSessionPayload,
   RestringPayload,
 } from '../types'
 
@@ -69,6 +70,16 @@ export const createSession = (
 
 export const deleteSession = (racquetId: number, sessionId: number): Promise<void> =>
   api.delete(`/racquets/${racquetId}/sessions/${sessionId}`).then(() => undefined)
+
+export const getSession = (racquetId: number, sessionId: number): Promise<Session> =>
+  api.get<Session>(`/racquets/${racquetId}/sessions/${sessionId}`).then((r) => r.data)
+
+export const updateSession = (
+  racquetId: number,
+  sessionId: number,
+  payload: UpdateSessionPayload
+): Promise<Session> =>
+  api.put<Session>(`/racquets/${racquetId}/sessions/${sessionId}`, payload).then((r) => r.data)
 
 // --- String Records ---
 export const fetchStringRecords = (racquetId: number): Promise<StringRecord[]> =>

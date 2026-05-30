@@ -19,6 +19,17 @@ type CreateSessionRequest struct {
 	Name           string             `json:"name"`
 	Notes          string             `json:"notes"`
 	StringRecordID uint               `json:"string_record_id"` // optional: override which string record to attach
+	// Match-specific (ignored for training sessions)
+	MatchResult     models.MatchResult `json:"match_result"`
+	MatchScore      string             `json:"match_score"`
+	OpponentRacquet string             `json:"opponent_racquet"`
+}
+
+type UpdateSessionRequest struct {
+	Notes           string             `json:"notes"`
+	MatchResult     models.MatchResult `json:"match_result"`
+	MatchScore      string             `json:"match_score"`
+	OpponentRacquet string             `json:"opponent_racquet"`
 }
 
 // GET /api/racquets/:id/sessions
@@ -65,12 +76,15 @@ func CreateSession(c *gin.Context) {
 	}
 
 	session := models.Session{
-		RacquetID:   uint(racquetID),
-		Date:        sessionDate,
-		DurationMin: req.DurationMin,
-		Type:        req.Type,
-		Name:        req.Name,
-		Notes:       req.Notes,
+		RacquetID:       uint(racquetID),
+		Date:            sessionDate,
+		DurationMin:     req.DurationMin,
+		Type:            req.Type,
+		Name:            req.Name,
+		Notes:           req.Notes,
+		MatchResult:     req.MatchResult,
+		MatchScore:      req.MatchScore,
+		OpponentRacquet: req.OpponentRacquet,
 	}
 
 	if req.StringRecordID > 0 {
@@ -155,4 +169,68 @@ func DeleteSession(c *gin.Context) {
 
 	database.DB.Delete(&session)
 	c.JSON(http.StatusOK, gin.H{"message": "session deleted"})
+}
+
+// GET /api/racquets/:id/sessions/:sessionID
+func GetSession(c *gin.Context) {
+	racquetID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid racquet id"})
+		return
+	}
+
+	sessionID, err := strconv.Atoi(c.Param("sessionID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid session id"})
+		return
+	}
+
+	var session models.Session
+	if err := database.DB.Where("id = ? AND racquet_id = ?", sessionID, racquetID).First(&session).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "session not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, session)
+}
+
+// PUT /api/racquets/:id/sessions/:sessionID
+func UpdateSession(c *gin.Context) {
+	racquetID, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid racquet id"})
+		return
+	}
+
+	sessionID, err := strconv.Atoi(c.Param("sessionID"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid session id"})
+		return
+	}
+
+	var session models.Session
+	if err := database.DB.Where("id = ? AND racquet_id = ?", sessionID, racquetID).First(&session).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "session not found"})
+		return
+	}
+
+	var req UpdateSessionRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	session.Notes = req.Notes
+	if session.Type == models.SessionMatch {
+		session.MatchResult = req.MatchResult
+		session.MatchScore = req.MatchScore
+		session.OpponentRacquet = req.OpponentRacquet
+	}
+
+	if err := database.DB.Save(&session).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, session)
 }

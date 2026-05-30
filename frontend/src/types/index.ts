@@ -71,6 +71,9 @@ export interface Racquet {
   needs_restring: boolean
   restring_suggestion: string
   usage_percent: number
+  win_ratio: number
+  total_matches: number
+  win_matches: number
   sessions?: Session[]
 }
 
@@ -84,6 +87,10 @@ export interface Session {
   type: SessionType
   name: string
   notes: string
+  // Match-specific
+  match_result?: 'win' | 'loss' | ''
+  match_score?: string
+  opponent_racquet?: string
 }
 
 export interface CreateRacquetPayload {
@@ -108,6 +115,16 @@ export interface CreateSessionPayload {
   name?: string
   notes?: string
   string_record_id?: number
+  match_result?: 'win' | 'loss' | ''
+  match_score?: string
+  opponent_racquet?: string
+}
+
+export interface UpdateSessionPayload {
+  notes?: string
+  match_result?: 'win' | 'loss' | ''
+  match_score?: string
+  opponent_racquet?: string
 }
 
 export interface RestringPayload {

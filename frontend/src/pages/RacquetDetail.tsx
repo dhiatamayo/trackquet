@@ -13,6 +13,7 @@ import type { Racquet, Session, StringRecord, RestringPayload } from '../types'
 import UsageBar from '../components/UsageBar'
 import LogSessionModal from '../components/LogSessionModal'
 import RestringModal from '../components/RestringModal'
+import SessionDetailModal from '../components/SessionDetailModal'
 
 export default function RacquetDetail() {
   const { id } = useParams<{ id: string }>()
@@ -24,6 +25,7 @@ export default function RacquetDetail() {
   const [saving, setSaving] = useState(false)
   const [stringRecords, setStringRecords] = useState<StringRecord[]>([])
   const [expandedRecord, setExpandedRecord] = useState<number | null>(null)
+  const [selectedSession, setSelectedSession] = useState<Session | null>(null)
 
   // Compose display name for single or hybrid string setups
   const displayStringName = (name: string, gauge: string, crossName?: string, crossGauge?: string) => {
@@ -60,6 +62,9 @@ export default function RacquetDetail() {
     name: string
     notes: string
     stringRecordId?: number
+    matchResult?: 'win' | 'loss' | ''
+    matchScore?: string
+    opponentRacquet?: string
   }) => {
     setSaving(true)
     try {
@@ -70,6 +75,9 @@ export default function RacquetDetail() {
         name: data.name,
         notes: data.notes,
         string_record_id: data.stringRecordId,
+        match_result: data.matchResult,
+        match_score: data.matchScore,
+        opponent_racquet: data.opponentRacquet,
       })
       toast.success('Session logged!')
       setShowLog(false)
@@ -167,7 +175,7 @@ export default function RacquetDetail() {
       </div>
 
       {/* Usage stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
         <StatCard emoji="🔗" label="String Hours" value={`${racquet.total_hours.toFixed(1)}h`} tooltip="Hours on the current string setup" />
         <StatCard emoji="⏳" label="Racquet Total" value={`${lifetimeHours.toFixed(1)}h`} tooltip="Total play time across all string setups" />
         <StatCard emoji="🎯" label="Threshold" value={`${racquet.threshold_hours}h`} />
@@ -183,6 +191,23 @@ export default function RacquetDetail() {
               : racquet.usage_percent >= 85
               ? 'Expect a slight drop in performance as tension fades.'
               : 'Most likely maintaining full string performance.'
+          }
+        />
+        <StatCard
+          emoji="🏅"
+          label="Win Ratio"
+          value={racquet.total_matches > 0 ? `${racquet.win_ratio.toFixed(0)}%` : '—'}
+          highlight={
+            racquet.total_matches > 0 && racquet.win_ratio >= 60
+              ? undefined
+              : racquet.total_matches > 0 && racquet.win_ratio < 40
+              ? 'red'
+              : undefined
+          }
+          tooltip={
+            racquet.total_matches > 0
+              ? `${racquet.win_matches}W / ${racquet.total_matches - racquet.win_matches}L across ${racquet.total_matches} match${racquet.total_matches !== 1 ? 'es' : ''}`
+              : 'No match sessions logged yet'
           }
         />
       </div>
@@ -221,7 +246,7 @@ export default function RacquetDetail() {
             {[...sessions]
               .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
               .map((s) => (
-                <SessionRow key={s.id} session={s} onDelete={handleDeleteSession} />
+                <SessionRow key={s.id} session={s} onDelete={handleDeleteSession} onView={setSelectedSession} />
               ))}
           </ul>
         )}
@@ -275,11 +300,21 @@ export default function RacquetDetail() {
                         const h = Math.floor(s.duration_min / 60), m = s.duration_min % 60
                         const dur = h > 0 ? `${h}h${m > 0 ? ` ${m}m` : ''}` : `${m}m`
                         return (
-                          <li key={s.id} className="flex items-center gap-3 px-8 py-2.5 text-sm">
+                          <li
+                            key={s.id}
+                            className="flex items-center gap-3 px-8 py-2.5 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
+                            onClick={() => setSelectedSession(s)}
+                          >
                             <span>{s.type === 'match' ? '🏆' : '🏋️'}</span>
                             <div className="flex-1 min-w-0">
                               <span className="text-gray-800 font-medium">{s.name || s.type}</span>
                               <span className="text-gray-400 text-xs ml-2">{sDate}</span>
+                              {s.match_result && (
+                                <span className={`ml-2 text-xs font-semibold ${s.match_result === 'win' ? 'text-green-600' : 'text-red-500'}`}>
+                                  {s.match_result === 'win' ? '🏅 W' : '😤 L'}
+                                  {s.match_score && ` ${s.match_score}`}
+                                </span>
+                              )}
                               {s.notes && <p className="text-xs text-gray-400 truncate">{s.notes}</p>}
                             </div>
                             <span className="text-court-700 font-semibold text-xs shrink-0">{dur}</span>
@@ -322,11 +357,23 @@ export default function RacquetDetail() {
           loading={saving}
         />
       )}
+
+      {selectedSession && (
+        <SessionDetailModal
+          session={selectedSession}
+          racquetId={Number(id)}
+          onClose={() => setSelectedSession(null)}
+          onUpdated={() => {
+            setSelectedSession(null)
+            load()
+          }}
+        />
+      )}
     </div>
   )
 }
 
-function SessionRow({ session, onDelete }: { session: Session; onDelete: (id: number) => void }) {
+function SessionRow({ session, onDelete, onView }: { session: Session; onDelete: (id: number) => void; onView: (s: Session) => void }) {
   const dateStr = (() => {
     try {
       return format(new Date(session.date), 'MMM d, yyyy')
@@ -340,15 +387,24 @@ function SessionRow({ session, onDelete }: { session: Session; onDelete: (id: nu
   const durationStr = hours > 0 ? `${hours}h ${mins > 0 ? mins + 'm' : ''}`.trim() : `${mins}m`
 
   return (
-    <li className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50">
+    <li
+      className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+      onClick={() => onView(session)}
+    >
       <span className="text-xl">{session.type === 'match' ? '🏆' : '🏋️'}</span>
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-sm capitalize text-gray-800">{session.name || session.type}</span>
           <span className="text-xs text-gray-400">·</span>
           <span className="text-xs text-gray-500 capitalize">{session.type}</span>
           <span className="text-xs text-gray-400">·</span>
           <span className="text-xs text-gray-500">{dateStr}</span>
+          {session.match_result && (
+            <span className={`text-xs font-semibold ${session.match_result === 'win' ? 'text-green-600' : 'text-red-500'}`}>
+              {session.match_result === 'win' ? '🏅 W' : '😤 L'}
+              {session.match_score && ` · ${session.match_score}`}
+            </span>
+          )}
         </div>
         {session.notes && (
           <p className="text-xs text-gray-400 truncate mt-0.5">{session.notes}</p>
@@ -356,7 +412,7 @@ function SessionRow({ session, onDelete }: { session: Session; onDelete: (id: nu
       </div>
       <span className="text-sm font-semibold text-court-700 shrink-0">{durationStr}</span>
       <button
-        onClick={() => onDelete(session.id)}
+        onClick={(e) => { e.stopPropagation(); onDelete(session.id) }}
         className="text-gray-300 hover:text-red-500 transition-colors ml-1 shrink-0"
         title="Delete session"
       >

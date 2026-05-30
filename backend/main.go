@@ -75,6 +75,8 @@ func main() {
 			// Sessions (nested under racquet)
 			protected.GET("/racquets/:id/sessions", handlers.ListSessions)
 			protected.POST("/racquets/:id/sessions", handlers.CreateSession)
+			protected.GET("/racquets/:id/sessions/:sessionID", handlers.GetSession)
+			protected.PUT("/racquets/:id/sessions/:sessionID", handlers.UpdateSession)
 			protected.DELETE("/racquets/:id/sessions/:sessionID", handlers.DeleteSession)
 
 			// String records (history)

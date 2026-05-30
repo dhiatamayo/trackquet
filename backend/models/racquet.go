@@ -16,26 +16,26 @@ type StringPreset struct {
 
 // Racquet represents a tennis racquet owned by the user
 type Racquet struct {
-	ID             uint           `gorm:"primaryKey" json:"id"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
-	DeletedAt      gorm.DeletedAt `gorm:"index" json:"-"`
-	UserID         uint           `gorm:"index;not null;default:0" json:"user_id"`
-	Name           string         `gorm:"not null" json:"name"`
-	Brand          string         `json:"brand"`
-	Year           int            `json:"year"`            // release year / version year
-	HeadSize       float64        `json:"head_size"`       // in sq. inches
-	Weight         float64        `json:"weight"`          // in grams
-	StringName     string         `json:"string_name"`      // main string name (or only string)
-	Gauge          string         `json:"gauge"`            // main gauge e.g. "16", "17", "18"
-	CrossStringName string        `json:"cross_string_name"` // cross string name (hybrid only)
-	CrossGauge     string         `json:"cross_gauge"`      // cross gauge (hybrid only)
-	MainTension    float64        `json:"main_tension"`    // main string tension in lbs
-	CrossTension   float64        `json:"cross_tension"`   // cross string tension in lbs
-	ThresholdHours int            `json:"threshold_hours"` // hours before restring
-	TotalMinutes   int            `json:"total_minutes"`   // accumulated play time in minutes (current string)
-	Sessions       []Session      `gorm:"foreignKey:RacquetID" json:"sessions,omitempty"`
-	StringRecords  []StringRecord `gorm:"foreignKey:RacquetID" json:"string_records,omitempty"`
+	ID              uint           `gorm:"primaryKey" json:"id"`
+	CreatedAt       time.Time      `json:"created_at"`
+	UpdatedAt       time.Time      `json:"updated_at"`
+	DeletedAt       gorm.DeletedAt `gorm:"index" json:"-"`
+	UserID          uint           `gorm:"index;not null;default:0" json:"user_id"`
+	Name            string         `gorm:"not null" json:"name"`
+	Brand           string         `json:"brand"`
+	Year            int            `json:"year"`              // release year / version year
+	HeadSize        float64        `json:"head_size"`         // in sq. inches
+	Weight          float64        `json:"weight"`            // in grams
+	StringName      string         `json:"string_name"`       // main string name (or only string)
+	Gauge           string         `json:"gauge"`             // main gauge e.g. "16", "17", "18"
+	CrossStringName string         `json:"cross_string_name"` // cross string name (hybrid only)
+	CrossGauge      string         `json:"cross_gauge"`       // cross gauge (hybrid only)
+	MainTension     float64        `json:"main_tension"`      // main string tension in lbs
+	CrossTension    float64        `json:"cross_tension"`     // cross string tension in lbs
+	ThresholdHours  int            `json:"threshold_hours"`   // hours before restring
+	TotalMinutes    int            `json:"total_minutes"`     // accumulated play time in minutes (current string)
+	Sessions        []Session      `gorm:"foreignKey:RacquetID" json:"sessions,omitempty"`
+	StringRecords   []StringRecord `gorm:"foreignKey:RacquetID" json:"string_records,omitempty"`
 }
 
 // TotalHours returns accumulated play time as hours (float)
