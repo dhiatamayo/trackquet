@@ -173,6 +173,7 @@ func DeleteSession(c *gin.Context) {
 
 // GET /api/racquets/:id/sessions/:sessionID
 func GetSession(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
 	racquetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid racquet id"})
@@ -182,6 +183,13 @@ func GetSession(c *gin.Context) {
 	sessionID, err := strconv.Atoi(c.Param("sessionID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid session id"})
+		return
+	}
+
+	// Verify the racquet belongs to this user before exposing the session
+	var racquet models.Racquet
+	if err := database.DB.Where("id = ? AND user_id = ?", racquetID, userID).First(&racquet).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "racquet not found"})
 		return
 	}
 
@@ -196,6 +204,7 @@ func GetSession(c *gin.Context) {
 
 // PUT /api/racquets/:id/sessions/:sessionID
 func UpdateSession(c *gin.Context) {
+	userID := c.MustGet("userID").(uint)
 	racquetID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid racquet id"})
@@ -205,6 +214,13 @@ func UpdateSession(c *gin.Context) {
 	sessionID, err := strconv.Atoi(c.Param("sessionID"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid session id"})
+		return
+	}
+
+	// Verify the racquet belongs to this user before allowing updates
+	var racquet models.Racquet
+	if err := database.DB.Where("id = ? AND user_id = ?", racquetID, userID).First(&racquet).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "racquet not found"})
 		return
 	}
 
