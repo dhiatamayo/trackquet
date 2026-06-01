@@ -1,4 +1,4 @@
-﻿import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import type React from 'react'
 import html2canvas from 'html2canvas'
 import type { MonthlyReport, NotableSession } from '../types'
@@ -11,13 +11,13 @@ interface Props {
 type Theme = 'aurora' | 'neon' | 'clay' | 'frost'
 
 const THEMES: { id: Theme; label: string; emoji: string }[] = [
-  { id: 'aurora', label: 'Aurora', emoji: 'ðŸŒŒ' },
-  { id: 'neon',   label: 'Neon',   emoji: 'âš¡' },
-  { id: 'clay',   label: 'Clay',   emoji: 'ðŸ†' },
-  { id: 'frost',  label: 'Frost',  emoji: 'â„ï¸' },
+  { id: 'aurora', label: 'Aurora', emoji: '🌌' },
+  { id: 'neon',   label: 'Neon',   emoji: '⚡' },
+  { id: 'clay',   label: 'Clay',   emoji: '🏆' },
+  { id: 'frost',  label: 'Frost',  emoji: '❄️' },
 ]
 
-// â”€â”€â”€ shared helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── shared helpers ──────────────────────────────────────────────────────────
 
 function fmtMin(min: number): string {
   const h = Math.floor(min / 60)
@@ -28,22 +28,22 @@ function fmtMin(min: number): string {
 }
 
 function notableIcon(tag: string) {
-  if (tag.toLowerCase().includes('win')) return 'ðŸ†'
-  if (tag.toLowerCase().includes('loss')) return 'ðŸ˜¤'
-  if (tag.toLowerCase().includes('training')) return 'ðŸŽ¯'
-  return 'â±ï¸'
+  if (tag.toLowerCase().includes('win')) return '🏆'
+  if (tag.toLowerCase().includes('loss')) return '😤'
+  if (tag.toLowerCase().includes('training')) return '🎯'
+  return '⏱️'
 }
 
-// â”€â”€â”€ Card prop types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Card prop types ─────────────────────────────────────────────────────────
 
 interface CardProps {
   report: MonthlyReport
   cardRef: React.Ref<HTMLDivElement>
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// AURORA â€” dark indigo / purple (original)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════════
+// AURORA — dark indigo / purple (original)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 function auroraResultBadge(tag: string) {
   if (tag.toLowerCase().includes('win'))  return { bg: '#22c55e', text: '#ffffff' }
@@ -61,7 +61,7 @@ function AuroraNotableRow({ s }: { s: NotableSession }) {
           {s.name || s.racquet_name}
         </div>
         <div style={{ fontSize: 10, color: '#94a3b8' }}>
-          {s.date} Â· {fmtMin(s.duration_min)}{s.match_score ? ` Â· ${s.match_score}` : ''}
+          {s.date} · {fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}
         </div>
       </div>
       <span style={{ fontSize: 9, fontWeight: 700, background: bg, color: text, borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -96,10 +96,10 @@ function AuroraCard({ report, cardRef }: CardProps) {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
         {[
-          { label: 'Sessions', value: String(report.total_sessions), emoji: 'ðŸŽ¾' },
-          { label: 'Hours', value: totalHours, emoji: 'â±ï¸' },
-          { label: 'Avg/Session', value: `${report.avg_min_per_session}m`, emoji: 'ðŸ“Š' },
-          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : 'â€”', emoji: 'ðŸ…' },
+          { label: 'Sessions', value: String(report.total_sessions), emoji: '🎾' },
+          { label: 'Hours', value: totalHours, emoji: '⏱️' },
+          { label: 'Avg/Session', value: `${report.avg_min_per_session}m`, emoji: '📊' },
+          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : '—', emoji: '🏅' },
         ].map((stat) => (
           <div key={stat.label} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 6px', textAlign: 'center' }}>
             <div style={{ fontSize: 16 }}>{stat.emoji}</div>
@@ -122,7 +122,7 @@ function AuroraCard({ report, cardRef }: CardProps) {
                   <span style={{ fontSize: 9, fontWeight: 700, background: i === 0 ? '#f59e0b' : 'rgba(255,255,255,0.15)', color: i === 0 ? '#000' : '#94a3b8', borderRadius: 4, padding: '1px 5px' }}>#{i + 1}</span>
                   <span style={{ fontSize: 11, fontWeight: 600, color: '#e2e8f0', maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rq.racquet_name}</span>
                 </div>
-                <span style={{ fontSize: 10, color: '#94a3b8' }}>{rq.sessions} session{rq.sessions !== 1 ? 's' : ''} Â· {fmtMin(rq.total_min)}</span>
+                <span style={{ fontSize: 10, color: '#94a3b8' }}>{rq.sessions} session{rq.sessions !== 1 ? 's' : ''} · {fmtMin(rq.total_min)}</span>
               </div>
               <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
                 <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? 'linear-gradient(90deg, #818cf8, #a78bfa)' : 'rgba(129,140,248,0.5)', borderRadius: 2 }} />
@@ -141,7 +141,7 @@ function AuroraCard({ report, cardRef }: CardProps) {
 
       <div style={{ marginTop: 'auto', paddingTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 14 }}>ðŸŽ¾</span>
+          <span style={{ fontSize: 14 }}>🎾</span>
           <span style={{ fontSize: 13, fontWeight: 800, background: 'linear-gradient(90deg, #818cf8, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>trackquet</span>
         </div>
         <span style={{ fontSize: 9, color: '#475569', letterSpacing: '0.05em' }}>TRACK YOUR GAME</span>
@@ -150,9 +150,9 @@ function AuroraCard({ report, cardRef }: CardProps) {
   )
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// NEON â€” cyberpunk black / magenta / cyan
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════════
+// NEON — cyberpunk black / magenta / cyan
+// ═══════════════════════════════════════════════════════════════════════════════
 
 function NeonCard({ report, cardRef }: CardProps) {
   const totalHours = (report.total_minutes / 60).toFixed(1)
@@ -178,16 +178,16 @@ function NeonCard({ report, cardRef }: CardProps) {
 
       {/* Header */}
       <div style={{ marginBottom: 18, paddingTop: 4 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#00ffdd', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 5 }}>â—ˆ Monthly Performance â—ˆ</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#00ffdd', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 5 }}>◈ Monthly Performance ◈</div>
         <div style={{ fontSize: 26, fontWeight: 900, color: '#ffffff', lineHeight: 1.05, letterSpacing: '-0.01em' }}>{report.month}</div>
       </div>
 
-      {/* 2Ã—2 big stat grid */}
+      {/* 2×2 big stat grid */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
         {[
           { label: 'Sessions', value: String(report.total_sessions), color: '#00ffdd' },
           { label: 'Hours', value: totalHours, color: '#ff0080' },
-          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : 'â€”', color: '#ffe600' },
+          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : '—', color: '#ffe600' },
           { label: 'Avg/Session', value: `${report.avg_min_per_session}m`, color: '#bf80ff' },
         ].map((stat) => (
           <div key={stat.label} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${stat.color}33`, borderRadius: 10, padding: '12px 14px', boxShadow: `inset 0 0 20px ${stat.color}10` }}>
@@ -202,14 +202,14 @@ function NeonCard({ report, cardRef }: CardProps) {
 
       {/* Racquet usage */}
       <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#00ffdd', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 8 }}>â–¸ Racquet Usage</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#00ffdd', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 8 }}>▸ Racquet Usage</div>
         {usageTop5.slice(0, 4).map((rq, i) => {
           const pct = usageTop5[0].sessions > 0 ? (rq.sessions / usageTop5[0].sessions) * 100 : 0
           return (
             <div key={rq.racquet_id} style={{ marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                <span style={{ fontSize: 11, color: '#e2e8f0', fontWeight: 600 }}>{i === 0 ? 'â˜… ' : ''}{rq.racquet_name}</span>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{rq.sessions}s Â· {fmtMin(rq.total_min)}</span>
+                <span style={{ fontSize: 11, color: '#e2e8f0', fontWeight: 600 }}>{i === 0 ? '★ ' : ''}{rq.racquet_name}</span>
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{rq.sessions}s · {fmtMin(rq.total_min)}</span>
               </div>
               <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2 }}>
                 <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? '#00ffdd' : '#ff0080', borderRadius: 2 }} />
@@ -222,7 +222,7 @@ function NeonCard({ report, cardRef }: CardProps) {
       {/* Milestones */}
       {report.notable_results.length > 0 && (
         <div style={{ flex: 1, minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#ff0080', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 8 }}>â–¸ Milestones</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#ff0080', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 8 }}>▸ Milestones</div>
           {report.notable_results.slice(0, 4).map((s) => {
             const isWin = s.notable_tag.toLowerCase().includes('win')
             const isLoss = s.notable_tag.toLowerCase().includes('loss')
@@ -232,7 +232,7 @@ function NeonCard({ report, cardRef }: CardProps) {
                 <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
-                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{fmtMin(s.duration_min)}{s.match_score ? ` Â· ${s.match_score}` : ''}</div>
+                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
                 </div>
                 <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: accentColor, border: `1px solid ${accentColor}`, borderRadius: 4, padding: '2px 5px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
               </div>
@@ -243,16 +243,16 @@ function NeonCard({ report, cardRef }: CardProps) {
 
       {/* Footer */}
       <div style={{ marginTop: 'auto', paddingTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: '#00ffdd', letterSpacing: '0.05em' }}>ðŸŽ¾ trackquet</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: '#00ffdd', letterSpacing: '0.05em' }}>🎾 trackquet</span>
         <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Track Your Game</span>
       </div>
     </div>
   )
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// CLAY â€” warm amber / dark brown (premium tennis aesthetic)
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════════
+// CLAY — warm amber / dark brown (premium tennis aesthetic)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 function ClayCard({ report, cardRef }: CardProps) {
   const totalHours = (report.total_minutes / 60).toFixed(1)
@@ -279,7 +279,7 @@ function ClayCard({ report, cardRef }: CardProps) {
 
       {/* Header */}
       <div style={{ marginBottom: 18, textAlign: 'center' }}>
-        <div style={{ fontSize: 9, fontWeight: 400, color: '#f59e0b', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 5 }}>â”€â”€â”€ Monthly Wrap-Up â”€â”€â”€</div>
+        <div style={{ fontSize: 9, fontWeight: 400, color: '#f59e0b', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 5 }}>─── Monthly Wrap-Up ───</div>
         <div style={{ fontSize: 24, fontWeight: 700, color: '#fef3c7', lineHeight: 1.1 }}>{report.month}</div>
       </div>
 
@@ -288,7 +288,7 @@ function ClayCard({ report, cardRef }: CardProps) {
         {[
           { label: 'Sessions', value: String(report.total_sessions) },
           { label: 'Hours', value: totalHours },
-          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : 'â€”' },
+          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : '—' },
         ].map((stat, i) => (
           <div key={stat.label} style={{ textAlign: 'center', flex: 1, borderRight: i < 2 ? '1px solid rgba(245,158,11,0.2)' : 'none' }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#f59e0b', lineHeight: 1, fontFamily: ffSans }}>{stat.value}</div>
@@ -299,14 +299,14 @@ function ClayCard({ report, cardRef }: CardProps) {
 
       {/* Avg session */}
       <div style={{ textAlign: 'center', marginBottom: 14 }}>
-        <span style={{ fontSize: 10, color: '#d97706', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Avg. Session Â· </span>
+        <span style={{ fontSize: 10, color: '#d97706', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Avg. Session · </span>
         <span style={{ fontSize: 16, fontWeight: 700, color: '#fef3c7', fontFamily: ffSans }}>{report.avg_min_per_session} min</span>
       </div>
 
       {/* Divider */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
         <div style={{ flex: 1, height: 1, background: 'rgba(245,158,11,0.25)' }} />
-        <span style={{ fontSize: 12 }}>ðŸŽ¾</span>
+        <span style={{ fontSize: 12 }}>🎾</span>
         <div style={{ flex: 1, height: 1, background: 'rgba(245,158,11,0.25)' }} />
       </div>
 
@@ -318,7 +318,7 @@ function ClayCard({ report, cardRef }: CardProps) {
           return (
             <div key={rq.racquet_id} style={{ marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                <span style={{ fontSize: 11, color: '#fef3c7', fontFamily: ffSans }}>{i === 0 ? 'ðŸ‘‘ ' : ''}{rq.racquet_name}</span>
+                <span style={{ fontSize: 11, color: '#fef3c7', fontFamily: ffSans }}>{i === 0 ? '👑 ' : ''}{rq.racquet_name}</span>
                 <span style={{ fontSize: 10, color: '#d97706', fontFamily: ffSans }}>{rq.sessions} sessions</span>
               </div>
               <div style={{ height: 4, background: 'rgba(245,158,11,0.1)', borderRadius: 2 }}>
@@ -338,7 +338,7 @@ function ClayCard({ report, cardRef }: CardProps) {
               <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11, fontWeight: 600, color: '#fef3c7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.name || s.racquet_name}</div>
-                <div style={{ fontSize: 9, color: '#d97706', fontFamily: ffSans }}>{fmtMin(s.duration_min)}{s.match_score ? ` Â· ${s.match_score}` : ''}</div>
+                <div style={{ fontSize: 9, color: '#d97706', fontFamily: ffSans }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
               </div>
               <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'rgba(245,158,11,0.2)', color: '#f59e0b', borderRadius: 4, padding: '2px 6px', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.notable_tag}</span>
             </div>
@@ -348,16 +348,16 @@ function ClayCard({ report, cardRef }: CardProps) {
 
       {/* Footer */}
       <div style={{ marginTop: 'auto', paddingTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(245,158,11,0.2)' }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', fontFamily: ffSans, letterSpacing: '0.05em' }}>ðŸŽ¾ trackquet</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', fontFamily: ffSans, letterSpacing: '0.05em' }}>🎾 trackquet</span>
         <span style={{ fontSize: 9, color: 'rgba(254,243,199,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: ffSans }}>Track Your Game</span>
       </div>
     </div>
   )
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-// FROST â€” clean light / white minimal
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════════
+// FROST — clean light / white minimal
+// ═══════════════════════════════════════════════════════════════════════════════
 
 function FrostCard({ report, cardRef }: CardProps) {
   const totalHours = (report.total_minutes / 60).toFixed(1)
@@ -391,7 +391,7 @@ function FrostCard({ report, cardRef }: CardProps) {
         {[
           { label: 'Sessions', value: String(report.total_sessions), bg: '#ede9fe', color: '#4f46e5' },
           { label: 'Hours', value: totalHours, bg: '#e0f2fe', color: '#0369a1' },
-          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : 'â€”', bg: '#dcfce7', color: '#15803d' },
+          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : '—', bg: '#dcfce7', color: '#15803d' },
           { label: 'Avg/Session', value: `${report.avg_min_per_session}m`, bg: '#fce7f3', color: '#be185d' },
         ].map((stat) => (
           <div key={stat.label} style={{ background: stat.bg, borderRadius: 12, padding: '12px 14px' }}>
@@ -416,7 +416,7 @@ function FrostCard({ report, cardRef }: CardProps) {
                   {i === 0 && <span style={{ fontSize: 9, fontWeight: 700, background: '#4f46e5', color: '#fff', borderRadius: 4, padding: '1px 5px' }}>TOP</span>}
                   <span style={{ fontSize: 11, color: '#1e293b', fontWeight: 600 }}>{rq.racquet_name}</span>
                 </div>
-                <span style={{ fontSize: 10, color: '#64748b' }}>{rq.sessions}s Â· {fmtMin(rq.total_min)}</span>
+                <span style={{ fontSize: 10, color: '#64748b' }}>{rq.sessions}s · {fmtMin(rq.total_min)}</span>
               </div>
               <div style={{ height: 5, background: '#e2e8f0', borderRadius: 3 }}>
                 <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? '#4f46e5' : '#a5b4fc', borderRadius: 3 }} />
@@ -438,7 +438,7 @@ function FrostCard({ report, cardRef }: CardProps) {
                 <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
-                  <div style={{ fontSize: 9, color: '#94a3b8' }}>{fmtMin(s.duration_min)}{s.match_score ? ` Â· ${s.match_score}` : ''}</div>
+                  <div style={{ fontSize: 9, color: '#94a3b8' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
                 </div>
                 <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', background: isWin ? '#dcfce7' : isLoss ? '#fee2e2' : '#fef3c7', color: isWin ? '#15803d' : isLoss ? '#dc2626' : '#b45309', borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
               </div>
@@ -449,16 +449,16 @@ function FrostCard({ report, cardRef }: CardProps) {
 
       {/* Footer */}
       <div style={{ marginTop: 'auto', paddingTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0' }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: '#4f46e5', letterSpacing: '0.01em' }}>ðŸŽ¾ trackquet</span>
+        <span style={{ fontSize: 13, fontWeight: 800, color: '#4f46e5', letterSpacing: '0.01em' }}>🎾 trackquet</span>
         <span style={{ fontSize: 9, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Track Your Game</span>
       </div>
     </div>
   )
 }
 
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════════
 // Dispatcher
-// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+// ═══════════════════════════════════════════════════════════════════════════════
 
 function StoryCard({ report, cardRef, theme }: CardProps & { theme: Theme }) {
   switch (theme) {
@@ -469,11 +469,11 @@ function StoryCard({ report, cardRef, theme }: CardProps & { theme: Theme }) {
   }
 }
 
-// â”€â”€â”€ Story Card (the actual PNG content) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Story Card (the actual PNG content) ────────────────────────────────────
 
-// (kept for reference â€” now replaced by themed cards above)
+// (kept for reference — now replaced by themed cards above)
 
-// â”€â”€â”€ Main Modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+// ─── Main Modal ──────────────────────────────────────────────────────────────
 
 export default function MonthlyReportModal({ report, onClose }: Props) {
   const cardRef = useRef<HTMLDivElement>(null)
@@ -484,7 +484,7 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
   const captureCanvas = useCallback(async (): Promise<Blob> => {
     if (!cardRef.current) throw new Error('Card not mounted')
     const canvas = await html2canvas(cardRef.current, {
-      scale: 3,           // 360Ã—3 = 1080, 640Ã—3 = 1920 â†’ full story resolution
+      scale: 3,           // 360×3 = 1080, 640×3 = 1920 → full story resolution
       useCORS: true,
       backgroundColor: null,
       logging: false,
@@ -524,8 +524,8 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
         type: 'image/png',
       })
       await navigator.share({
-        title: `Trackquet â€” ${report.month}`,
-        text: `My tennis wrap-up for ${report.month} ðŸŽ¾`,
+        title: `Trackquet — ${report.month}`,
+        text: `My tennis wrap-up for ${report.month} 🎾`,
         files: [file],
       })
     } catch (err) {
@@ -552,7 +552,7 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
           onClick={onClose}
           className="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center text-sm shadow-lg"
         >
-          âœ•
+          ✕
         </button>
 
         {/* Theme switcher */}
@@ -589,7 +589,7 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
             ) : (
-              'â¬‡ï¸'
+              '⬇️'
             )}
             Save PNG
           </button>
@@ -600,13 +600,13 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
               disabled={exporting}
               className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-60 transition-all shadow"
             >
-              ðŸ“² Share Story
+              📲 Share Story
             </button>
           )}
         </div>
 
         <p className="text-xs text-gray-400 text-center">
-          Exported at 1080Ã—1920 (Instagram Story)
+          Exported at 1080×1920 (Instagram Story)
         </p>
       </div>
     </div>
