@@ -1,15 +1,23 @@
 import { useState, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { fetchRacquets, createRacquet, deleteRacquet } from '../api/client'
-import type { Racquet } from '../types'
+import { fetchRacquets, createRacquet, deleteRacquet, fetchMonthlyReport } from '../api/client'
+import type { Racquet, MonthlyReport } from '../types'
 import RacquetCard from '../components/RacquetCard'
 import AddRacquetModal from '../components/AddRacquetModal'
+import MonthlyReportModal from '../components/MonthlyReportModal'
 
 export default function Dashboard() {
   const [racquets, setRacquets] = useState<Racquet[]>([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
   const [saving, setSaving] = useState(false)
+
+  // Monthly report state
+  const now = new Date()
+  const [reportYear, setReportYear] = useState(now.getFullYear())
+  const [reportMonth, setReportMonth] = useState(now.getMonth() + 1)
+  const [report, setReport] = useState<MonthlyReport | null>(null)
+  const [reportLoading, setReportLoading] = useState(false)
 
   const load = () => {
     fetchRacquets()
@@ -73,6 +81,26 @@ export default function Dashboard() {
     }
   }
 
+  const handleGenerateReport = async () => {
+    setReportLoading(true)
+    try {
+      const data = await fetchMonthlyReport(reportYear, reportMonth)
+      setReport(data)
+    } catch {
+      toast.error('Failed to generate report')
+    } finally {
+      setReportLoading(false)
+    }
+  }
+
+  const MONTH_NAMES = [
+    'January','February','March','April','May','June',
+    'July','August','September','October','November','December',
+  ]
+
+  // Build year options (3 years back from current)
+  const yearOptions = Array.from({ length: 4 }, (_, i) => now.getFullYear() - i)
+
   return (
     <div>
       {/* Page header */}
@@ -111,6 +139,59 @@ export default function Dashboard() {
         </div>
       )}
 
+      {/* ── Monthly Report Panel ── */}
+      <div className="card p-5 mb-8 bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          {/* Left: label */}
+          <div className="flex items-center gap-3 flex-1">
+            <div className="text-3xl">📊</div>
+            <div>
+              <h2 className="font-bold text-gray-900 text-base">Monthly Report</h2>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Generate a shareable story card of your monthly stats
+              </p>
+            </div>
+          </div>
+
+          {/* Right: month/year selectors + button */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <select
+              className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              value={reportMonth}
+              onChange={(e) => setReportMonth(Number(e.target.value))}
+            >
+              {MONTH_NAMES.map((m, i) => (
+                <option key={m} value={i + 1}>{m}</option>
+              ))}
+            </select>
+
+            <select
+              className="text-sm border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              value={reportYear}
+              onChange={(e) => setReportYear(Number(e.target.value))}
+            >
+              {yearOptions.map((y) => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+
+            <button
+              onClick={handleGenerateReport}
+              disabled={reportLoading}
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold disabled:opacity-60 transition-colors shadow-sm"
+            >
+              {reportLoading ? (
+                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                </svg>
+              ) : '✨'}
+              Generate
+            </button>
+          </div>
+        </div>
+      </div>
+
       {/* Racquet grid */}
       {loading ? (
         <div className="text-center py-16 text-gray-400">Loading…</div>
@@ -140,6 +221,13 @@ export default function Dashboard() {
           onClose={() => setShowAdd(false)}
           onSave={handleSave}
           loading={saving}
+        />
+      )}
+
+      {report && (
+        <MonthlyReportModal
+          report={report}
+          onClose={() => setReport(null)}
         />
       )}
     </div>
