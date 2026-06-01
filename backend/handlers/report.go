@@ -38,17 +38,17 @@ type NotableSession struct {
 }
 
 type MonthlyReportResponse struct {
-	Month              string             `json:"month"`        // e.g. "June 2026"
-	Year               int                `json:"year"`
-	MonthNum           int                `json:"month_num"`
-	TotalSessions      int                `json:"total_sessions"`
-	TotalMinutes       int                `json:"total_minutes"`
-	AvgMinPerSession   float64            `json:"avg_min_per_session"`
-	WinRate            float64            `json:"win_rate"`    // percentage 0-100
-	TotalWins          int                `json:"total_wins"`
-	TotalMatches       int                `json:"total_matches"`
-	RacquetUsage       []RacquetUsageStat `json:"racquet_usage"`
-	NotableResults     []NotableSession   `json:"notable_results"`
+	Month            string             `json:"month"` // e.g. "June 2026"
+	Year             int                `json:"year"`
+	MonthNum         int                `json:"month_num"`
+	TotalSessions    int                `json:"total_sessions"`
+	TotalMinutes     int                `json:"total_minutes"`
+	AvgMinPerSession float64            `json:"avg_min_per_session"`
+	WinRate          float64            `json:"win_rate"` // percentage 0-100
+	TotalWins        int                `json:"total_wins"`
+	TotalMatches     int                `json:"total_matches"`
+	RacquetUsage     []RacquetUsageStat `json:"racquet_usage"`
+	NotableResults   []NotableSession   `json:"notable_results"`
 }
 
 // GET /api/reports/monthly?year=2026&month=6
@@ -175,20 +175,22 @@ func GetMonthlyReport(c *gin.Context) {
 	})
 }
 
-// buildNotableResults returns up to 5 sessions: top wins (by duration), top losses (by duration),
-// longest training/overall. Avoids duplicates.
+// buildNotableResults returns up to 6 milestones: top wins (by duration), top losses (by duration),
+// longest match session, longest training session. Avoids duplicates.
 func buildNotableResults(sessions []models.Session, racquetMap map[uint]string) []NotableSession {
-	var wins, losses, longest []models.Session
+	var wins, losses, matches, trainings []models.Session
 	for _, s := range sessions {
 		cp := s
 		if s.Type == models.SessionMatch {
+			matches = append(matches, cp)
 			if s.MatchResult == models.MatchWin {
 				wins = append(wins, cp)
 			} else if s.MatchResult == models.MatchLoss {
 				losses = append(losses, cp)
 			}
+		} else {
+			trainings = append(trainings, cp)
 		}
-		longest = append(longest, cp)
 	}
 
 	byDurationDesc := func(a, b models.Session) int {
@@ -196,13 +198,14 @@ func buildNotableResults(sessions []models.Session, racquetMap map[uint]string) 
 	}
 	sort.Slice(wins, func(i, j int) bool { return byDurationDesc(wins[i], wins[j]) < 0 })
 	sort.Slice(losses, func(i, j int) bool { return byDurationDesc(losses[i], losses[j]) < 0 })
-	sort.Slice(longest, func(i, j int) bool { return byDurationDesc(longest[i], longest[j]) < 0 })
+	sort.Slice(matches, func(i, j int) bool { return byDurationDesc(matches[i], matches[j]) < 0 })
+	sort.Slice(trainings, func(i, j int) bool { return byDurationDesc(trainings[i], trainings[j]) < 0 })
 
 	seen := make(map[uint]bool)
 	var result []NotableSession
 
 	addSession := func(s models.Session, tag string) {
-		if seen[s.ID] || len(result) >= 5 {
+		if seen[s.ID] || len(result) >= 6 {
 			return
 		}
 		seen[s.ID] = true
@@ -238,13 +241,17 @@ func buildNotableResults(sessions []models.Session, racquetMap map[uint]string) 
 		addSession(losses[i], tag)
 	}
 
-	// 1 longest overall session (may already be in seen)
-	if len(longest) > 0 {
-		addSession(longest[0], "Longest Session")
-		// try next if first was already added
-		if len(result) < 5 && len(longest) > 1 {
-			addSession(longest[1], "Longest Session")
+	// Longest match (not already shown as win/loss above)
+	for _, s := range matches {
+		if !seen[s.ID] {
+			addSession(s, "Longest Match")
+			break
 		}
+	}
+
+	// Longest training session
+	if len(trainings) > 0 {
+		addSession(trainings[0], "Longest Training")
 	}
 
 	return result

@@ -27,6 +27,7 @@ function resultBadge(tag: string) {
 function notableIcon(tag: string) {
   if (tag.toLowerCase().includes('win')) return '🏆'
   if (tag.toLowerCase().includes('loss')) return '😤'
+  if (tag.toLowerCase().includes('training')) return '🎯'
   return '⏱️'
 }
 
@@ -275,7 +276,7 @@ function StoryCard({ report, cardRef }: CardProps) {
         )}
       </div>
 
-      {/* Notable results */}
+      {/* Milestones */}
       {report.notable_results.length > 0 && (
         <div style={{ flex: 1, minHeight: 0 }}>
           <div
@@ -288,7 +289,7 @@ function StoryCard({ report, cardRef }: CardProps) {
               marginBottom: 7,
             }}
           >
-            Notable Results
+            Milestones
           </div>
           {report.notable_results.map((s) => (
             <NotableRow key={`${s.session_id}-${s.notable_tag}`} s={s} />
