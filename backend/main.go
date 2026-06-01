@@ -84,6 +84,9 @@ func main() {
 
 			// String presets (public-ish but fine behind auth)
 			protected.GET("/string-presets", handlers.ListStringPresets)
+
+			// Monthly report
+			protected.GET("/reports/monthly", handlers.GetMonthlyReport)
 		}
 	}
 

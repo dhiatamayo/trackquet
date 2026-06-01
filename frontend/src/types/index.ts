@@ -136,3 +136,41 @@ export interface RestringPayload {
   cross_tension?: number
   threshold_hours?: number
 }
+
+// --- Monthly Report ---
+
+export interface RacquetUsageStat {
+  racquet_id: number
+  racquet_name: string
+  sessions: number
+  total_min: number
+  wins: number
+  losses: number
+}
+
+export interface NotableSession {
+  session_id: number
+  racquet_name: string
+  date: string
+  name: string
+  duration_min: number
+  type: string
+  match_result: string
+  match_score: string
+  opponent_racquet: string
+  notable_tag: string
+}
+
+export interface MonthlyReport {
+  month: string
+  year: number
+  month_num: number
+  total_sessions: number
+  total_minutes: number
+  avg_min_per_session: number
+  win_rate: number
+  total_wins: number
+  total_matches: number
+  racquet_usage: RacquetUsageStat[]
+  notable_results: NotableSession[]
+}
