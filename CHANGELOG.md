@@ -5,6 +5,26 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.0] — 2026-06-01
+
+### Added
+
+#### Monthly Report
+- **Monthly Report panel** on the Dashboard — year/month selects and a Generate button fetch an aggregated stats summary for the selected month.
+- **Shareable Story Card** — 9:16 vertical card rendered at 360×640 on-screen and exported at 1080×1920 (html2canvas scale:3) as `trackquet-{month}-story.png`.
+- **4 visual themes** — Aurora (dark indigo/purple gradient), Neon (cyberpunk black/magenta/cyan), Clay (warm amber/dark brown serif), Frost (clean white minimal). Switched via a row of emoji+label buttons in the modal header.
+- **Export to PNG** — downloads the story card as a full-resolution PNG.
+- **Share Story** — Web Share API with title, text, and PNG file; guarded by `navigator.canShare({ files })` and degrades gracefully when unsupported.
+- **Stats displayed** — total sessions, total hours, avg min/session, win rate (matches only), top 3 racquets by session count with usage bars, up to 6 session milestones (Best Win, Worst Loss, Longest Match, Longest Training, Most Recent Win, Most Recent Loss).
+
+#### API
+- `GET /api/reports/monthly?year=YYYY&month=MM` — returns `MonthlyReportResponse` with total sessions, hours, win rate, `RacquetUsageStat` array (ranked by session count), and `NotableSession` array (up to 6 milestones) for the authenticated user.
+
+#### Testing
+- `backend/handlers/report_test.go` — 12 unit tests covering: no racquets, no sessions in month, totals/avg/win-rate aggregation, milestone win/loss ordering, longest match vs. longest training split, no-duplicate milestone check, invalid query params (4 sub-cases), racquet usage ranking.
+
+---
+
 ## [0.1.0] — 2026-05-30
 
 ### Added
