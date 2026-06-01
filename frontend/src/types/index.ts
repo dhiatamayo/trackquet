@@ -154,10 +154,10 @@ export interface NotableSession {
   date: string
   name: string
   duration_min: number
-  type: string
-  match_result: string
-  match_score: string
-  opponent_racquet: string
+  type: SessionType
+  match_result: 'win' | 'loss' | ''
+  match_score?: string
+  opponent_racquet?: string
   notable_tag: string
 }
 

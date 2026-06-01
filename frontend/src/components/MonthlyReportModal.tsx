@@ -479,7 +479,15 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
   const cardRef = useRef<HTMLDivElement>(null)
   const [theme, setTheme] = useState<Theme>('aurora')
   const [exporting, setExporting] = useState(false)
-  const [shareSupported] = useState(() => typeof navigator !== 'undefined' && !!navigator.share)
+  const [shareSupported] = useState(() => {
+    if (typeof navigator === 'undefined' || !navigator.share) return false
+    if (!navigator.canShare) return true
+    try {
+      return navigator.canShare({ files: [new File([], 'trackquet.png', { type: 'image/png' })] })
+    } catch {
+      return false
+    }
+  })
 
   const captureCanvas = useCallback(async (): Promise<Blob> => {
     if (!cardRef.current) throw new Error('Card not mounted')
@@ -523,6 +531,10 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
       const file = new File([blob], `trackquet-${report.month.replace(' ', '-').toLowerCase()}.png`, {
         type: 'image/png',
       })
+      if (!navigator.share) throw new Error('Share is not supported')
+      if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+        throw new Error('Sharing files is not supported')
+      }
       await navigator.share({
         title: `Trackquet — ${report.month}`,
         text: `My tennis wrap-up for ${report.month} 🎾`,

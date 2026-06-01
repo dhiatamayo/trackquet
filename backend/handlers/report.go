@@ -146,7 +146,7 @@ func GetMonthlyReport(c *gin.Context) {
 		return usage[i].TotalMin > usage[j].TotalMin
 	})
 
-	// --- Notable results (up to 5) ---
+	// --- Notable results (up to 6) ---
 	notable := buildNotableResults(sessions, racquetMap)
 
 	// --- Assemble response ---
