@@ -59,8 +59,6 @@ func addSession(t *testing.T, rqID uint, name string, sessionType models.Session
 	return s
 }
 
-
-
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 func TestGetMonthlyReport_NoRacquets(t *testing.T) {
