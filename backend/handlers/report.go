@@ -292,12 +292,23 @@ func buildNotableResults(sessions []models.Session, racquetMap map[uint]string) 
 		addSession(losses[0], "Hardest Loss")
 	}
 
-	// Longest match not already shown
-	for _, s := range matches {
-		if !seen[s.ID] {
-			addSession(s, "Longest Match")
-			break
-		}
+	// Longest match — always show the actual longest match, even if it is
+	// also the Biggest Win or Hardest Loss (different milestone tag).
+	if len(matches) > 0 && len(result) < 4 {
+		s := matches[0]
+		result = append(result, NotableSession{
+			SessionID:       s.ID,
+			RacquetName:     racquetMap[s.RacquetID],
+			Date:            s.Date.Format("2006-01-02"),
+			Name:            s.Name,
+			DurationMin:     s.DurationMin,
+			Type:            string(s.Type),
+			MatchResult:     string(s.MatchResult),
+			MatchScore:      s.MatchScore,
+			OpponentRacquet: s.OpponentRacquet,
+			NotableTag:      "Longest Match",
+		})
+		seen[s.ID] = true
 	}
 
 	// Longest training session
