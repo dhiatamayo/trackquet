@@ -12,6 +12,7 @@ import type {
   CreateSessionPayload,
   UpdateSessionPayload,
   RestringPayload,
+  MonthlyReport,
 } from '../types'
 
 const api = axios.create({
@@ -88,3 +89,7 @@ export const fetchStringRecords = (racquetId: number): Promise<StringRecord[]> =
 // --- String Presets ---
 export const fetchStringPresets = (): Promise<StringPreset[]> =>
   api.get<StringPreset[]>('/string-presets').then((r) => r.data)
+
+// --- Reports ---
+export const fetchMonthlyReport = (year: number, month: number): Promise<MonthlyReport> =>
+  api.get<MonthlyReport>(`/reports/monthly?year=${year}&month=${month}`).then((r) => r.data)
