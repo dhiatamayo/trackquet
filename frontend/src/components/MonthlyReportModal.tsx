@@ -135,7 +135,7 @@ function AuroraCard({ report, cardRef }: CardProps) {
       {report.notable_results.length > 0 && (
         <div style={{ flex: 1, minHeight: 0 }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 7 }}>Milestones</div>
-          {report.notable_results.map((s) => <AuroraNotableRow key={`${s.session_id}-${s.notable_tag}`} s={s} />)}
+          {report.notable_results.slice(0, 4).map((s) => <AuroraNotableRow key={`${s.session_id}-${s.notable_tag}`} s={s} />)}
         </div>
       )}
 
@@ -551,12 +551,13 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 overflow-y-auto"
       style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
       onClick={onClose}
     >
+      <div className="flex min-h-full items-center justify-center p-4 py-6">
       <div
-        className="relative flex flex-col items-center gap-3 max-h-[95vh] overflow-y-auto"
+        className="relative flex flex-col items-center gap-3"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
@@ -620,6 +621,7 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
         <p className="text-xs text-gray-400 text-center">
           Exported at 1080×1920 (Instagram Story)
         </p>
+      </div>
       </div>
     </div>
   )

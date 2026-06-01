@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"trackquet/database"
@@ -175,8 +176,41 @@ func GetMonthlyReport(c *gin.Context) {
 	})
 }
 
-// buildNotableResults returns up to 6 milestones: top wins (by duration), top losses (by duration),
-// longest match session, longest training session. Avoids duplicates.
+// parseScoreMargin parses a score string like "6-3, 7-5" and returns the total
+// absolute game margin across all sets. Scored matches with a higher margin are
+// considered bigger wins (or harder losses). Returns -1 if the score is empty or
+// cannot be parsed, so unscored matches sort after scored ones.
+func parseScoreMargin(score string) int {
+	if score == "" {
+		return -1
+	}
+	total, parsed := 0, 0
+	for _, set := range strings.Split(score, ",") {
+		parts := strings.SplitN(strings.TrimSpace(set), "-", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		a, err1 := strconv.Atoi(strings.TrimSpace(parts[0]))
+		b, err2 := strconv.Atoi(strings.TrimSpace(parts[1]))
+		if err1 != nil || err2 != nil {
+			continue
+		}
+		if a > b {
+			total += a - b
+		} else {
+			total += b - a
+		}
+		parsed++
+	}
+	if parsed == 0 {
+		return -1
+	}
+	return total
+}
+
+// buildNotableResults returns up to 4 milestones: biggest win (by score margin),
+// hardest loss (by score margin), longest match, longest training. Avoids duplicates.
+// Scored matches always rank above unscored ones within each category.
 func buildNotableResults(sessions []models.Session, racquetMap map[uint]string) []NotableSession {
 	var wins, losses, matches, trainings []models.Session
 	for _, s := range sessions {
@@ -193,19 +227,44 @@ func buildNotableResults(sessions []models.Session, racquetMap map[uint]string) 
 		}
 	}
 
-	byDurationDesc := func(a, b models.Session) int {
-		return b.DurationMin - a.DurationMin
-	}
-	sort.Slice(wins, func(i, j int) bool { return byDurationDesc(wins[i], wins[j]) < 0 })
-	sort.Slice(losses, func(i, j int) bool { return byDurationDesc(losses[i], losses[j]) < 0 })
-	sort.Slice(matches, func(i, j int) bool { return byDurationDesc(matches[i], matches[j]) < 0 })
-	sort.Slice(trainings, func(i, j int) bool { return byDurationDesc(trainings[i], trainings[j]) < 0 })
+	// Sort wins: scored wins first (higher margin = bigger win), then unscored by duration
+	sort.SliceStable(wins, func(i, j int) bool {
+		mi, mj := parseScoreMargin(wins[i].MatchScore), parseScoreMargin(wins[j].MatchScore)
+		if mi >= 0 && mj < 0 {
+			return true
+		}
+		if mi < 0 && mj >= 0 {
+			return false
+		}
+		if mi != mj {
+			return mi > mj
+		}
+		return wins[i].DurationMin > wins[j].DurationMin
+	})
+
+	// Sort losses: scored losses first (higher margin = harder loss), then unscored by duration
+	sort.SliceStable(losses, func(i, j int) bool {
+		mi, mj := parseScoreMargin(losses[i].MatchScore), parseScoreMargin(losses[j].MatchScore)
+		if mi >= 0 && mj < 0 {
+			return true
+		}
+		if mi < 0 && mj >= 0 {
+			return false
+		}
+		if mi != mj {
+			return mi > mj
+		}
+		return losses[i].DurationMin > losses[j].DurationMin
+	})
+
+	sort.Slice(matches, func(i, j int) bool { return matches[i].DurationMin > matches[j].DurationMin })
+	sort.Slice(trainings, func(i, j int) bool { return trainings[i].DurationMin > trainings[j].DurationMin })
 
 	seen := make(map[uint]bool)
 	var result []NotableSession
 
 	addSession := func(s models.Session, tag string) {
-		if seen[s.ID] || len(result) >= 6 {
+		if seen[s.ID] || len(result) >= 4 {
 			return
 		}
 		seen[s.ID] = true
@@ -223,25 +282,17 @@ func buildNotableResults(sessions []models.Session, racquetMap map[uint]string) 
 		})
 	}
 
-	// Up to 2 biggest wins
-	for i := 0; i < 2 && i < len(wins); i++ {
-		tag := "Biggest Win"
-		if i == 1 {
-			tag = "Notable Win"
-		}
-		addSession(wins[i], tag)
+	// Biggest win (scored matches ranked first by margin)
+	if len(wins) > 0 {
+		addSession(wins[0], "Biggest Win")
 	}
 
-	// Up to 2 hardest losses
-	for i := 0; i < 2 && i < len(losses); i++ {
-		tag := "Hardest Loss"
-		if i == 1 {
-			tag = "Notable Loss"
-		}
-		addSession(losses[i], tag)
+	// Hardest loss (scored matches ranked first by margin)
+	if len(losses) > 0 {
+		addSession(losses[0], "Hardest Loss")
 	}
 
-	// Longest match (not already shown as win/loss above)
+	// Longest match not already shown
 	for _, s := range matches {
 		if !seen[s.ID] {
 			addSession(s, "Longest Match")
