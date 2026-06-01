@@ -178,7 +178,7 @@ function NeonCard({ report, cardRef }: CardProps) {
 
       {/* Header */}
       <div style={{ marginBottom: 18, paddingTop: 4 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#00ffdd', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 5 }}>◈ Monthly Performance ◈</div>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#00ffdd', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 5 }}>◈ Monthly Wrap-Up ◈</div>
         <div style={{ fontSize: 26, fontWeight: 900, color: '#ffffff', lineHeight: 1.05, letterSpacing: '-0.01em' }}>{report.month}</div>
       </div>
 
