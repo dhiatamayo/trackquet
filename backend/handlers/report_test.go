@@ -59,6 +59,23 @@ func addSession(t *testing.T, rqID uint, name string, sessionType models.Session
 	return s
 }
 
+// addSessionWithScore is like addSession but also sets a match score string.
+func addSessionWithScore(t *testing.T, rqID uint, name string, sessionType models.SessionType,
+	result models.MatchResult, durationMin int, year, month int, score string) models.Session {
+	t.Helper()
+	s := models.Session{
+		RacquetID:   rqID,
+		Name:        name,
+		Type:        sessionType,
+		MatchResult: result,
+		DurationMin: durationMin,
+		MatchScore:  score,
+		Date:        time.Date(year, time.Month(month), 5, 0, 0, 0, 0, time.UTC),
+	}
+	require.NoError(t, database.DB.Create(&s).Error)
+	return s
+}
+
 // ── tests ─────────────────────────────────────────────────────────────────────
 
 func TestGetMonthlyReport_NoRacquets(t *testing.T) {
@@ -141,11 +158,11 @@ func TestGetMonthlyReport_Milestones_WinsAndLosses(t *testing.T) {
 	r := setupReportRouter()
 	u, rq := seedUserWithRacquet(t)
 
-	// Two wins (biggest should be longest)
-	addSession(t, rq.ID, "Big Win", models.SessionMatch, models.MatchWin, 120, 2026, 6)
+	// Win with score (should rank above unscored win by margin)
+	addSessionWithScore(t, rq.ID, "Big Win", models.SessionMatch, models.MatchWin, 120, 2026, 6, "6-0")
 	addSession(t, rq.ID, "Small Win", models.SessionMatch, models.MatchWin, 60, 2026, 6)
-	// Two losses
-	addSession(t, rq.ID, "Hard Loss", models.SessionMatch, models.MatchLoss, 110, 2026, 6)
+	// Loss with bigger margin scores higher
+	addSessionWithScore(t, rq.ID, "Hard Loss", models.SessionMatch, models.MatchLoss, 110, 2026, 6, "0-6, 3-6")
 	addSession(t, rq.ID, "Small Loss", models.SessionMatch, models.MatchLoss, 50, 2026, 6)
 
 	url := "/api/reports/monthly?year=2026&month=6"
@@ -160,17 +177,18 @@ func TestGetMonthlyReport_Milestones_WinsAndLosses(t *testing.T) {
 		tags[i] = n.NotableTag
 	}
 	assert.Contains(t, tags, "Biggest Win")
-	assert.Contains(t, tags, "Notable Win")
 	assert.Contains(t, tags, "Hardest Loss")
-	assert.Contains(t, tags, "Notable Loss")
+	// Notable Win / Notable Loss no longer exist — only 1 of each
+	assert.NotContains(t, tags, "Notable Win")
+	assert.NotContains(t, tags, "Notable Loss")
 
-	// Biggest Win should have the longer duration
+	// Biggest Win should be the scored win; Hardest Loss should be the scored loss
 	for _, n := range resp.NotableResults {
 		if n.NotableTag == "Biggest Win" {
-			assert.Equal(t, 120, n.DurationMin)
+			assert.Equal(t, "6-0", n.MatchScore)
 		}
 		if n.NotableTag == "Hardest Loss" {
-			assert.Equal(t, 110, n.DurationMin)
+			assert.Equal(t, "0-6, 3-6", n.MatchScore)
 		}
 	}
 }
@@ -212,10 +230,10 @@ func TestGetMonthlyReport_MilestonesNoDuplicates(t *testing.T) {
 	r := setupReportRouter()
 	u, rq := seedUserWithRacquet(t)
 
-	// 3 wins — the top 2 become Biggest Win / Notable Win; the 3rd is the longest remaining match
-	addSession(t, rq.ID, "Win A", models.SessionMatch, models.MatchWin, 120, 2026, 6)
+	// Biggest Win (scored) is also the longest match — it should appear twice with different tags.
+	// Win B is a shorter unscored win that should NOT appear.
+	addSessionWithScore(t, rq.ID, "Win A", models.SessionMatch, models.MatchWin, 120, 2026, 6, "6-0")
 	addSession(t, rq.ID, "Win B", models.SessionMatch, models.MatchWin, 90, 2026, 6)
-	addSession(t, rq.ID, "Win C", models.SessionMatch, models.MatchWin, 70, 2026, 6)
 
 	url := "/api/reports/monthly?year=2026&month=6"
 	w := testhelper.Do(r, testhelper.ReqAuth("GET", url, "", u.ID))
@@ -224,20 +242,23 @@ func TestGetMonthlyReport_MilestonesNoDuplicates(t *testing.T) {
 	var resp handlers.MonthlyReportResponse
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 
-	// Verify no session ID appears twice
-	seen := make(map[uint]int)
+	// Win A may appear twice (once as Biggest Win, once as Longest Match) — that is intentional.
+	// What must never happen is the same (session ID, tag) pair appearing more than once.
+	seen := make(map[string]int)
 	for _, n := range resp.NotableResults {
-		seen[n.SessionID]++
+		key := fmt.Sprintf("%d:%s", n.SessionID, n.NotableTag)
+		seen[key]++
 	}
-	for id, count := range seen {
-		assert.Equal(t, 1, count, "session %d appeared %d times in milestones", id, count)
+	for key, count := range seen {
+		assert.Equal(t, 1, count, "milestone key %q appeared %d times", key, count)
 	}
 
 	tags := make([]string, len(resp.NotableResults))
 	for i, n := range resp.NotableResults {
 		tags[i] = n.NotableTag
 	}
-	assert.Contains(t, tags, "Longest Match") // Win C should fill this slot
+	assert.Contains(t, tags, "Biggest Win")
+	assert.Contains(t, tags, "Longest Match") // Win A doubles as the longest match
 }
 
 func TestGetMonthlyReport_InvalidParams(t *testing.T) {
