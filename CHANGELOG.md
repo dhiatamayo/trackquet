@@ -17,6 +17,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - **Neon theme title** — corrected "Monthly Performance" to "Monthly Wrap-Up" for consistency across all four themes.
 - **Modal scroll on mobile** — both the Monthly Report modal and the Log Session modal now use the `overflow-y-auto` + `min-h-full` pattern, preventing the dialog from clipping behind the browser URL bar on mobile.
 
+#### Story Card PNG Export
+- **Switched to `html-to-image`** — replaced `html2canvas` with `html-to-image` (SVG `foreignObject` renderer). Eliminates text-shift and clipping artefacts caused by `html2canvas` miscomputing paint coordinates inside flex containers, affecting milestone rows, racquet usage bar, and the footer on all four themes.
+
 #### Testing
 - Updated `report_test.go` to reflect new 4-milestone logic: score-based assertions, no "Notable Win"/"Notable Loss" tags, and updated duplicate check to allow the same session to appear with two different tags.
 

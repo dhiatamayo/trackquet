@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import type React from 'react'
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image'
 import type { MonthlyReport, NotableSession } from '../types'
 
 interface Props {
@@ -57,14 +57,14 @@ function AuroraNotableRow({ s }: { s: NotableSession }) {
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 8, padding: '7px 10px', marginBottom: 5 }}>
       <span style={{ fontSize: 15 }}>{notableIcon(s.notable_tag)}</span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {s.name || s.racquet_name}
         </div>
-        <div style={{ fontSize: 10, color: '#94a3b8' }}>
+        <div style={{ fontSize: 10, lineHeight: 1.2, color: '#94a3b8' }}>
           {s.date} · {fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}
         </div>
       </div>
-      <span style={{ fontSize: 9, fontWeight: 700, background: bg, color: text, borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+      <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.2, background: bg, color: text, borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
         {s.notable_tag}
       </span>
     </div>
@@ -231,10 +231,10 @@ function NeonCard({ report, cardRef }: CardProps) {
               <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 5, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
                 <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
-                  <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.3)' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.25, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
+                  <div style={{ fontSize: 9, lineHeight: 1.2, color: 'rgba(255,255,255,0.3)' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
                 </div>
-                <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: accentColor, border: `1px solid ${accentColor}`, borderRadius: 4, padding: '2px 5px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
+                <span style={{ fontSize: 8, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.05em', color: accentColor, border: `1px solid ${accentColor}`, borderRadius: 4, padding: '2px 5px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
               </div>
             )
           })}
@@ -337,10 +337,10 @@ function ClayCard({ report, cardRef }: CardProps) {
             <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 5, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 8 }}>
               <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#fef3c7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.name || s.racquet_name}</div>
-                <div style={{ fontSize: 9, color: '#d97706', fontFamily: ffSans }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.25, color: '#fef3c7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.name || s.racquet_name}</div>
+                <div style={{ fontSize: 9, lineHeight: 1.2, color: '#d97706', fontFamily: ffSans }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
               </div>
-              <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'rgba(245,158,11,0.2)', color: '#f59e0b', borderRadius: 4, padding: '2px 6px', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.notable_tag}</span>
+              <span style={{ fontSize: 8, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'rgba(245,158,11,0.2)', color: '#f59e0b', borderRadius: 4, padding: '2px 6px', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.notable_tag}</span>
             </div>
           ))}
         </div>
@@ -437,10 +437,10 @@ function FrostCard({ report, cardRef }: CardProps) {
               <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', marginBottom: 5, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
-                  <div style={{ fontSize: 9, color: '#94a3b8' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.25, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
+                  <div style={{ fontSize: 9, lineHeight: 1.2, color: '#94a3b8' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
                 </div>
-                <span style={{ fontSize: 8, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', background: isWin ? '#dcfce7' : isLoss ? '#fee2e2' : '#fef3c7', color: isWin ? '#15803d' : isLoss ? '#dc2626' : '#b45309', borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
+                <span style={{ fontSize: 8, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.04em', background: isWin ? '#dcfce7' : isLoss ? '#fee2e2' : '#fef3c7', color: isWin ? '#15803d' : isLoss ? '#dc2626' : '#b45309', borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
               </div>
             )
           })}
@@ -491,22 +491,23 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
 
   const captureCanvas = useCallback(async (): Promise<Blob> => {
     if (!cardRef.current) throw new Error('Card not mounted')
-    const canvas = await html2canvas(cardRef.current, {
-      scale: 3,           // 360×3 = 1080, 640×3 = 1920 → full story resolution
-      useCORS: true,
-      backgroundColor: null,
-      logging: false,
+
+    if ('fonts' in document) {
+      await (document as Document & { fonts?: FontFaceSet }).fonts?.ready
+    }
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const el = cardRef.current
+    const dataUrl = await toPng(el, {
+      pixelRatio: 3,        // 360×3 = 1080, 640×3 = 1920 → full story resolution
+      width: 360,
+      height: el.offsetHeight,
+      cacheBust: true,
+      skipFonts: true,      // system fonts are always available; skip inlining
     })
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob)
-          else reject(new Error('Canvas export failed'))
-        },
-        'image/png',
-        1.0
-      )
-    })
+
+    const res = await fetch(dataUrl)
+    return res.blob()
   }, [])
 
   const handleSave = async () => {
