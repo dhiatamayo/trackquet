@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import type React from 'react'
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image'
 import type { MonthlyReport, NotableSession } from '../types'
 
 interface Props {
@@ -492,63 +492,22 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
   const captureCanvas = useCallback(async (): Promise<Blob> => {
     if (!cardRef.current) throw new Error('Card not mounted')
 
-    const source = cardRef.current
-
-    // Clone and attach at (0,0) — NOT off-screen. html2canvas computes paint
-    // coordinates relative to the element's page position, so a large negative
-    // left offset causes subpixel clipping on flex-centered content.
-    const wrapper = document.createElement('div')
-    wrapper.style.cssText =
-      'position:fixed;top:0;left:0;width:360px;overflow:visible;' +
-      'opacity:0.001;pointer-events:none;z-index:-1;'
-
-    const clone = source.cloneNode(true) as HTMLDivElement
-    // Let height grow to content so nothing overflows the capture rect
-    clone.style.height = 'auto'
-    clone.style.minHeight = '640px'
-    clone.style.margin = '0'
-    clone.style.transform = 'none'
-
-    wrapper.appendChild(clone)
-    document.body.appendChild(wrapper)
-
-    try {
-      if ('fonts' in document) {
-        await (document as Document & { fonts?: FontFaceSet }).fonts?.ready
-      }
-
-      // Two frames: first for layout, second for paint
-      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-
-      const exportHeight = clone.scrollHeight
-
-      const canvas = await html2canvas(clone, {
-        scale: 3,           // 360×3 = 1080, 640×3 = 1920 → full story resolution
-        useCORS: true,
-        backgroundColor: null,
-        logging: false,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0,
-        width: 360,
-        height: exportHeight,
-        windowWidth: 360,
-      })
-
-      return await new Promise((resolve, reject) => {
-        canvas.toBlob(
-          (blob) => {
-            if (blob) resolve(blob)
-            else reject(new Error('Canvas export failed'))
-          },
-          'image/png',
-          1.0
-        )
-      })
-    } finally {
-      wrapper.remove()
+    if ('fonts' in document) {
+      await (document as Document & { fonts?: FontFaceSet }).fonts?.ready
     }
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+    const el = cardRef.current
+    const dataUrl = await toPng(el, {
+      pixelRatio: 3,        // 360×3 = 1080, 640×3 = 1920 → full story resolution
+      width: 360,
+      height: el.offsetHeight,
+      cacheBust: true,
+      skipFonts: true,      // system fonts are always available; skip inlining
+    })
+
+    const res = await fetch(dataUrl)
+    return res.blob()
   }, [])
 
   const handleSave = async () => {
