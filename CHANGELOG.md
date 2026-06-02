@@ -5,6 +5,23 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.1] — 2026-06-02
+
+### Fixed
+
+#### Monthly Report
+- **Score-margin milestone sorting** — Biggest Win and Hardest Loss now rank by total set-game margin (e.g. `6-0` outranks `7-5`). Scored matches always rank above unscored ones; unscored matches fall back to duration ordering.
+- **Milestone cap reduced to 4** — report now returns exactly 4 milestones (Biggest Win, Hardest Loss, Longest Match, Longest Training), down from 6. Removed the "Notable Win" and "Notable Loss" secondary entries.
+- **Longest Match always reflects true longest** — the Longest Match milestone now always shows the overall longest match session, even when that session also holds the Biggest Win or Hardest Loss tag (it will appear twice with different tags).
+- **Aurora card milestone overflow** — added `.slice(0, 4)` on the Aurora theme's milestone list, matching the other three themes and preventing overlap with the footer.
+- **Neon theme title** — corrected "Monthly Performance" to "Monthly Wrap-Up" for consistency across all four themes.
+- **Modal scroll on mobile** — both the Monthly Report modal and the Log Session modal now use the `overflow-y-auto` + `min-h-full` pattern, preventing the dialog from clipping behind the browser URL bar on mobile.
+
+#### Testing
+- Updated `report_test.go` to reflect new 4-milestone logic: score-based assertions, no "Notable Win"/"Notable Loss" tags, and updated duplicate check to allow the same session to appear with two different tags.
+
+---
+
 ## [0.2.0] — 2026-06-01
 
 ### Added
