@@ -493,44 +493,47 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
     if (!cardRef.current) throw new Error('Card not mounted')
 
     const source = cardRef.current
-    const rect = source.getBoundingClientRect()
-    const exportRoot = document.createElement('div')
-    exportRoot.style.position = 'fixed'
-    exportRoot.style.left = '-10000px'
-    exportRoot.style.top = '0'
-    exportRoot.style.width = `${Math.ceil(rect.width)}px`
-    exportRoot.style.height = `${Math.ceil(rect.height)}px`
-    exportRoot.style.overflow = 'visible'
-    exportRoot.style.pointerEvents = 'none'
-    exportRoot.style.background = 'transparent'
+
+    // Clone and attach at (0,0) — NOT off-screen. html2canvas computes paint
+    // coordinates relative to the element's page position, so a large negative
+    // left offset causes subpixel clipping on flex-centered content.
+    const wrapper = document.createElement('div')
+    wrapper.style.cssText =
+      'position:fixed;top:0;left:0;width:360px;overflow:visible;' +
+      'opacity:0.001;pointer-events:none;z-index:-1;'
 
     const clone = source.cloneNode(true) as HTMLDivElement
-    clone.style.margin = '0'
-    clone.style.transform = 'none'
+    // Let height grow to content so nothing overflows the capture rect
     clone.style.height = 'auto'
     clone.style.minHeight = '640px'
+    clone.style.margin = '0'
+    clone.style.transform = 'none'
 
-    exportRoot.appendChild(clone)
-    document.body.appendChild(exportRoot)
+    wrapper.appendChild(clone)
+    document.body.appendChild(wrapper)
 
     try {
       if ('fonts' in document) {
         await (document as Document & { fonts?: FontFaceSet }).fonts?.ready
       }
 
-      await new Promise((resolve) => requestAnimationFrame(() => resolve(null)))
+      // Two frames: first for layout, second for paint
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-      const exportHeight = Math.ceil(clone.scrollHeight)
+      const exportHeight = clone.scrollHeight
 
       const canvas = await html2canvas(clone, {
         scale: 3,           // 360×3 = 1080, 640×3 = 1920 → full story resolution
         useCORS: true,
         backgroundColor: null,
         logging: false,
+        x: 0,
+        y: 0,
         scrollX: 0,
         scrollY: 0,
-        width: Math.ceil(rect.width),
+        width: 360,
         height: exportHeight,
+        windowWidth: 360,
       })
 
       return await new Promise((resolve, reject) => {
@@ -544,7 +547,7 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
         )
       })
     } finally {
-      exportRoot.remove()
+      wrapper.remove()
     }
   }, [])
 
