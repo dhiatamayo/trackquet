@@ -491,22 +491,55 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
 
   const captureCanvas = useCallback(async (): Promise<Blob> => {
     if (!cardRef.current) throw new Error('Card not mounted')
-    const canvas = await html2canvas(cardRef.current, {
-      scale: 3,           // 360×3 = 1080, 640×3 = 1920 → full story resolution
-      useCORS: true,
-      backgroundColor: null,
-      logging: false,
-    })
-    return new Promise((resolve, reject) => {
-      canvas.toBlob(
-        (blob) => {
-          if (blob) resolve(blob)
-          else reject(new Error('Canvas export failed'))
-        },
-        'image/png',
-        1.0
-      )
-    })
+
+    const source = cardRef.current
+    const rect = source.getBoundingClientRect()
+    const exportRoot = document.createElement('div')
+    exportRoot.style.position = 'fixed'
+    exportRoot.style.left = '-10000px'
+    exportRoot.style.top = '0'
+    exportRoot.style.width = `${Math.ceil(rect.width)}px`
+    exportRoot.style.height = `${Math.ceil(rect.height)}px`
+    exportRoot.style.overflow = 'visible'
+    exportRoot.style.pointerEvents = 'none'
+    exportRoot.style.background = 'transparent'
+
+    const clone = source.cloneNode(true) as HTMLDivElement
+    clone.style.margin = '0'
+    clone.style.transform = 'none'
+
+    exportRoot.appendChild(clone)
+    document.body.appendChild(exportRoot)
+
+    try {
+      if ('fonts' in document) {
+        await (document as Document & { fonts?: FontFaceSet }).fonts?.ready
+      }
+
+      const canvas = await html2canvas(clone, {
+        scale: 3,           // 360×3 = 1080, 640×3 = 1920 → full story resolution
+        useCORS: true,
+        backgroundColor: null,
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        width: Math.ceil(rect.width),
+        height: Math.ceil(rect.height),
+      })
+
+      return await new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (blob) => {
+            if (blob) resolve(blob)
+            else reject(new Error('Canvas export failed'))
+          },
+          'image/png',
+          1.0
+        )
+      })
+    } finally {
+      exportRoot.remove()
+    }
   }, [])
 
   const handleSave = async () => {
