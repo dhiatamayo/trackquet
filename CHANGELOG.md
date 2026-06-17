@@ -5,6 +5,31 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.2] — 2026-06-17
+
+### Added
+
+#### Match Tracking
+- **Match type support** — added `match_type` (`singles` / `doubles`) on sessions across backend models, handlers, and frontend types/forms.
+- **Separate win metrics on racquet detail** — Racquet Detail now shows dedicated Singles and Doubles win-rate cards.
+
+### Changed
+
+#### Monthly Report
+- **Separate win rates per match type** — story cards now display Singles and Doubles win rates instead of one combined win-rate value.
+- **Neon/Frost card density tuning** — tightened spacing and panel sizing in upper sections so milestones and footer fit in PNG export without using scrollable containers.
+
+#### API
+- `MonthlyReportResponse` now includes per-type fields: `win_rate_singles`, `win_rate_doubles`, `total_wins_singles`, `total_wins_doubles`, `total_matches_singles`, `total_matches_doubles`.
+- `RacquetResponse` now includes per-type fields: `win_ratio_singles`, `win_ratio_doubles`, `total_matches_singles`, `total_matches_doubles`, `win_matches_singles`, `win_matches_doubles`.
+
+### Fixed
+
+#### Win-Rate Accuracy
+- **Forced-stop exclusion** — matches with empty `match_result` are excluded from all win-rate calculations (racquet-level and monthly report), preventing inflated or distorted percentages.
+
+---
+
 ## [0.2.1] — 2026-06-02
 
 ### Fixed

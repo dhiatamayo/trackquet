@@ -94,14 +94,20 @@ func hybridThreshold(mainGauge, crossGauge string) int {
 
 type RacquetResponse struct {
 	models.Racquet
-	TotalHours         float64 `json:"total_hours"`
-	LifetimeHours      float64 `json:"lifetime_hours"`
-	NeedsRestring      bool    `json:"needs_restring"`
-	RestringSuggestion string  `json:"restring_suggestion"`
-	UsagePercent       float64 `json:"usage_percent"`
-	WinRatio           float64 `json:"win_ratio"`    // percentage of match sessions that are wins
-	TotalMatches       int     `json:"total_matches"` // all-time match session count
-	WinMatches         int     `json:"win_matches"`   // all-time win count
+	TotalHours          float64 `json:"total_hours"`
+	LifetimeHours       float64 `json:"lifetime_hours"`
+	NeedsRestring       bool    `json:"needs_restring"`
+	RestringSuggestion  string  `json:"restring_suggestion"`
+	UsagePercent        float64 `json:"usage_percent"`
+	WinRatio            float64 `json:"win_ratio"`             // overall win percentage
+	WinRatioSingles     float64 `json:"win_ratio_singles"`     // singles win percentage
+	WinRatioDoubles     float64 `json:"win_ratio_doubles"`     // doubles win percentage
+	TotalMatches        int     `json:"total_matches"`         // all-time match session count
+	TotalMatchesSingles int     `json:"total_matches_singles"` // singles match count
+	TotalMatchesDoubles int     `json:"total_matches_doubles"` // doubles match count
+	WinMatches          int     `json:"win_matches"`           // all-time win count
+	WinMatchesSingles   int     `json:"win_matches_singles"`   // singles wins
+	WinMatchesDoubles   int     `json:"win_matches_doubles"`   // doubles wins
 }
 
 func toRacquetResponse(r models.Racquet) RacquetResponse {
@@ -125,30 +131,69 @@ func toRacquetResponse(r models.Racquet) RacquetResponse {
 	}
 
 	// Win ratio across all match sessions (all string records, all time)
+	// Exclude matches with no result (forced stop: empty match_result)
 	var totalMatches, winMatches int64
+	var totalMatchesSingles, winMatchesSingles int64
+	var totalMatchesDoubles, winMatchesDoubles int64
+
 	database.DB.Model(&models.Session{}).
-		Where("racquet_id = ? AND type = ?", r.ID, models.SessionMatch).
+		Where("racquet_id = ? AND type = ? AND match_result != ''", r.ID, models.SessionMatch).
 		Count(&totalMatches)
 	if totalMatches > 0 {
 		database.DB.Model(&models.Session{}).
-			Where("racquet_id = ? AND type = ? AND match_result = ?", r.ID, models.SessionMatch, models.MatchWin).
+			Where("racquet_id = ? AND type = ? AND match_result = ? AND match_result != ''", r.ID, models.SessionMatch, models.MatchWin).
 			Count(&winMatches)
 	}
+
+	// Singles matches
+	database.DB.Model(&models.Session{}).
+		Where("racquet_id = ? AND type = ? AND match_type = ? AND match_result != ''", r.ID, models.SessionMatch, models.MatchTypeSingles).
+		Count(&totalMatchesSingles)
+	if totalMatchesSingles > 0 {
+		database.DB.Model(&models.Session{}).
+			Where("racquet_id = ? AND type = ? AND match_type = ? AND match_result = ? AND match_result != ''", r.ID, models.SessionMatch, models.MatchTypeSingles, models.MatchWin).
+			Count(&winMatchesSingles)
+	}
+
+	// Doubles matches
+	database.DB.Model(&models.Session{}).
+		Where("racquet_id = ? AND type = ? AND match_type = ? AND match_result != ''", r.ID, models.SessionMatch, models.MatchTypeDoubles).
+		Count(&totalMatchesDoubles)
+	if totalMatchesDoubles > 0 {
+		database.DB.Model(&models.Session{}).
+			Where("racquet_id = ? AND type = ? AND match_type = ? AND match_result = ? AND match_result != ''", r.ID, models.SessionMatch, models.MatchTypeDoubles, models.MatchWin).
+			Count(&winMatchesDoubles)
+	}
+
 	winRatio := 0.0
 	if totalMatches > 0 {
 		winRatio = float64(winMatches) / float64(totalMatches) * 100
 	}
+	winRatioSingles := 0.0
+	if totalMatchesSingles > 0 {
+		winRatioSingles = float64(winMatchesSingles) / float64(totalMatchesSingles) * 100
+	}
+	winRatioDoubles := 0.0
+	if totalMatchesDoubles > 0 {
+		winRatioDoubles = float64(winMatchesDoubles) / float64(totalMatchesDoubles) * 100
+	}
 
 	return RacquetResponse{
-		Racquet:            r,
-		TotalHours:         r.TotalHours(),
-		LifetimeHours:      float64(lifetimeMin) / 60.0,
-		NeedsRestring:      r.NeedsRestring(),
-		RestringSuggestion: r.RestringSuggestion(),
-		UsagePercent:       pct,
-		WinRatio:           winRatio,
-		TotalMatches:       int(totalMatches),
-		WinMatches:         int(winMatches),
+		Racquet:             r,
+		TotalHours:          r.TotalHours(),
+		LifetimeHours:       float64(lifetimeMin) / 60.0,
+		NeedsRestring:       r.NeedsRestring(),
+		RestringSuggestion:  r.RestringSuggestion(),
+		UsagePercent:        pct,
+		WinRatio:            winRatio,
+		WinRatioSingles:     winRatioSingles,
+		WinRatioDoubles:     winRatioDoubles,
+		TotalMatches:        int(totalMatches),
+		TotalMatchesSingles: int(totalMatchesSingles),
+		TotalMatchesDoubles: int(totalMatchesDoubles),
+		WinMatches:          int(winMatches),
+		WinMatchesSingles:   int(winMatchesSingles),
+		WinMatchesDoubles:   int(winMatchesDoubles),
 	}
 }
 

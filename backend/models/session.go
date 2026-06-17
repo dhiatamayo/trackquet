@@ -4,6 +4,7 @@ import "time"
 
 type SessionType string
 type MatchResult string
+type MatchType string
 
 const (
 	SessionMatch    SessionType = "match"
@@ -11,6 +12,9 @@ const (
 
 	MatchWin  MatchResult = "win"
 	MatchLoss MatchResult = "loss"
+
+	MatchTypeSingles MatchType = "singles"
+	MatchTypeDoubles MatchType = "doubles"
 )
 
 // Session represents a single play session logged against a racquet
@@ -28,4 +32,5 @@ type Session struct {
 	MatchResult     MatchResult `json:"match_result"`     // "win" or "loss" (empty for training)
 	MatchScore      string      `json:"match_score"`      // optional score, e.g. "6-3, 7-5"
 	OpponentRacquet string      `json:"opponent_racquet"` // optional opponent's racquet info
+	MatchType       MatchType   `json:"match_type"`       // "singles" or "doubles" (empty for training)
 }

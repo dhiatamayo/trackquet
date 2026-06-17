@@ -23,6 +23,7 @@ type CreateSessionRequest struct {
 	MatchResult     models.MatchResult `json:"match_result"`
 	MatchScore      string             `json:"match_score"`
 	OpponentRacquet string             `json:"opponent_racquet"`
+	MatchType       models.MatchType   `json:"match_type"` // singles or doubles
 }
 
 type UpdateSessionRequest struct {
@@ -30,6 +31,7 @@ type UpdateSessionRequest struct {
 	MatchResult     models.MatchResult `json:"match_result"`
 	MatchScore      string             `json:"match_score"`
 	OpponentRacquet string             `json:"opponent_racquet"`
+	MatchType       models.MatchType   `json:"match_type"`
 }
 
 // GET /api/racquets/:id/sessions
@@ -85,6 +87,7 @@ func CreateSession(c *gin.Context) {
 		MatchResult:     req.MatchResult,
 		MatchScore:      req.MatchScore,
 		OpponentRacquet: req.OpponentRacquet,
+		MatchType:       req.MatchType,
 	}
 
 	if req.StringRecordID > 0 {
@@ -241,6 +244,7 @@ func UpdateSession(c *gin.Context) {
 		session.MatchResult = req.MatchResult
 		session.MatchScore = req.MatchScore
 		session.OpponentRacquet = req.OpponentRacquet
+		session.MatchType = req.MatchType
 	}
 
 	if err := database.DB.Save(&session).Error; err != nil {

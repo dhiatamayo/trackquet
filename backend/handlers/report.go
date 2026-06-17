@@ -39,17 +39,23 @@ type NotableSession struct {
 }
 
 type MonthlyReportResponse struct {
-	Month            string             `json:"month"` // e.g. "June 2026"
-	Year             int                `json:"year"`
-	MonthNum         int                `json:"month_num"`
-	TotalSessions    int                `json:"total_sessions"`
-	TotalMinutes     int                `json:"total_minutes"`
-	AvgMinPerSession float64            `json:"avg_min_per_session"`
-	WinRate          float64            `json:"win_rate"` // percentage 0-100
-	TotalWins        int                `json:"total_wins"`
-	TotalMatches     int                `json:"total_matches"`
-	RacquetUsage     []RacquetUsageStat `json:"racquet_usage"`
-	NotableResults   []NotableSession   `json:"notable_results"`
+	Month               string             `json:"month"` // e.g. "June 2026"
+	Year                int                `json:"year"`
+	MonthNum            int                `json:"month_num"`
+	TotalSessions       int                `json:"total_sessions"`
+	TotalMinutes        int                `json:"total_minutes"`
+	AvgMinPerSession    float64            `json:"avg_min_per_session"`
+	WinRate             float64            `json:"win_rate"`         // percentage 0-100 (overall)
+	WinRateSingles      float64            `json:"win_rate_singles"` // percentage 0-100
+	WinRateDoubles      float64            `json:"win_rate_doubles"` // percentage 0-100
+	TotalWins           int                `json:"total_wins"`
+	TotalWinsSingles    int                `json:"total_wins_singles"`
+	TotalWinsDoubles    int                `json:"total_wins_doubles"`
+	TotalMatches        int                `json:"total_matches"`
+	TotalMatchesSingles int                `json:"total_matches_singles"`
+	TotalMatchesDoubles int                `json:"total_matches_doubles"`
+	RacquetUsage        []RacquetUsageStat `json:"racquet_usage"`
+	NotableResults      []NotableSession   `json:"notable_results"`
 }
 
 // GET /api/reports/monthly?year=2026&month=6
@@ -108,7 +114,11 @@ func GetMonthlyReport(c *gin.Context) {
 	// --- Aggregate stats ---
 	totalMin := 0
 	totalWins := 0
+	totalWinsSingles := 0
+	totalWinsDoubles := 0
 	totalMatches := 0
+	totalMatchesSingles := 0
+	totalMatchesDoubles := 0
 	usageMap := make(map[uint]*RacquetUsageStat)
 
 	for _, s := range sessions {
@@ -125,12 +135,27 @@ func GetMonthlyReport(c *gin.Context) {
 		stat.Sessions++
 		stat.TotalMin += s.DurationMin
 		if s.Type == models.SessionMatch {
-			totalMatches++
-			if s.MatchResult == models.MatchWin {
-				totalWins++
-				stat.Wins++
-			} else if s.MatchResult == models.MatchLoss {
-				stat.Losses++
+			// Only count matches with a result (exclude forced stops with empty match_result)
+			if s.MatchResult != "" {
+				totalMatches++
+				if s.MatchResult == models.MatchWin {
+					totalWins++
+					stat.Wins++
+				} else if s.MatchResult == models.MatchLoss {
+					stat.Losses++
+				}
+				// Track singles vs doubles
+				if s.MatchType == models.MatchTypeSingles {
+					totalMatchesSingles++
+					if s.MatchResult == models.MatchWin {
+						totalWinsSingles++
+					}
+				} else if s.MatchType == models.MatchTypeDoubles {
+					totalMatchesDoubles++
+					if s.MatchResult == models.MatchWin {
+						totalWinsDoubles++
+					}
+				}
 			}
 		}
 	}
@@ -160,19 +185,33 @@ func GetMonthlyReport(c *gin.Context) {
 	if totalMatches > 0 {
 		winRate = float64(totalWins) / float64(totalMatches) * 100.0
 	}
+	winRateSingles := 0.0
+	if totalMatchesSingles > 0 {
+		winRateSingles = float64(totalWinsSingles) / float64(totalMatchesSingles) * 100.0
+	}
+	winRateDoubles := 0.0
+	if totalMatchesDoubles > 0 {
+		winRateDoubles = float64(totalWinsDoubles) / float64(totalMatchesDoubles) * 100.0
+	}
 
 	c.JSON(http.StatusOK, MonthlyReportResponse{
-		Month:            fmt.Sprintf("%s %d", month.String(), year),
-		Year:             year,
-		MonthNum:         monthInt,
-		TotalSessions:    totalSessions,
-		TotalMinutes:     totalMin,
-		AvgMinPerSession: roundTo1(avgMin),
-		WinRate:          roundTo1(winRate),
-		TotalWins:        totalWins,
-		TotalMatches:     totalMatches,
-		RacquetUsage:     usage,
-		NotableResults:   notable,
+		Month:               fmt.Sprintf("%s %d", month.String(), year),
+		Year:                year,
+		MonthNum:            monthInt,
+		TotalSessions:       totalSessions,
+		TotalMinutes:        totalMin,
+		AvgMinPerSession:    roundTo1(avgMin),
+		WinRate:             roundTo1(winRate),
+		WinRateSingles:      roundTo1(winRateSingles),
+		WinRateDoubles:      roundTo1(winRateDoubles),
+		TotalWins:           totalWins,
+		TotalWinsSingles:    totalWinsSingles,
+		TotalWinsDoubles:    totalWinsDoubles,
+		TotalMatches:        totalMatches,
+		TotalMatchesSingles: totalMatchesSingles,
+		TotalMatchesDoubles: totalMatchesDoubles,
+		RacquetUsage:        usage,
+		NotableResults:      notable,
 	})
 }
 
