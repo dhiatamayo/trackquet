@@ -194,20 +194,37 @@ export default function RacquetDetail() {
           }
         />
         <StatCard
-          emoji="🏅"
-          label="Win Ratio"
-          value={racquet.total_matches > 0 ? `${racquet.win_ratio.toFixed(0)}%` : '—'}
+          emoji="👤"
+          label="Singles"
+          value={racquet.total_matches_singles > 0 ? `${racquet.win_ratio_singles.toFixed(0)}%` : '—'}
           highlight={
-            racquet.total_matches > 0 && racquet.win_ratio >= 60
+            racquet.total_matches_singles > 0 && racquet.win_ratio_singles >= 60
               ? undefined
-              : racquet.total_matches > 0 && racquet.win_ratio < 40
+              : racquet.total_matches_singles > 0 && racquet.win_ratio_singles < 40
               ? 'red'
               : undefined
           }
           tooltip={
-            racquet.total_matches > 0
-              ? `${racquet.win_matches}W / ${racquet.total_matches - racquet.win_matches}L across ${racquet.total_matches} match${racquet.total_matches !== 1 ? 'es' : ''}`
-              : 'No match sessions logged yet'
+            racquet.total_matches_singles > 0
+              ? `${racquet.win_matches_singles}W / ${racquet.total_matches_singles - racquet.win_matches_singles}L across ${racquet.total_matches_singles} match${racquet.total_matches_singles !== 1 ? 'es' : ''}`
+              : 'No singles matches logged yet'
+          }
+        />
+        <StatCard
+          emoji="👥"
+          label="Doubles"
+          value={racquet.total_matches_doubles > 0 ? `${racquet.win_ratio_doubles.toFixed(0)}%` : '—'}
+          highlight={
+            racquet.total_matches_doubles > 0 && racquet.win_ratio_doubles >= 60
+              ? undefined
+              : racquet.total_matches_doubles > 0 && racquet.win_ratio_doubles < 40
+              ? 'red'
+              : undefined
+          }
+          tooltip={
+            racquet.total_matches_doubles > 0
+              ? `${racquet.win_matches_doubles}W / ${racquet.total_matches_doubles - racquet.win_matches_doubles}L across ${racquet.total_matches_doubles} match${racquet.total_matches_doubles !== 1 ? 'es' : ''}`
+              : 'No doubles matches logged yet'
           }
         />
       </div>

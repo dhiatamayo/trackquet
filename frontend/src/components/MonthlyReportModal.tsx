@@ -94,12 +94,24 @@ function AuroraCard({ report, cardRef }: CardProps) {
         <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.1, color: '#ffffff' }}>{report.month}</div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
         {[
           { label: 'Sessions', value: String(report.total_sessions), emoji: '🎾' },
           { label: 'Hours', value: totalHours, emoji: '⏱️' },
           { label: 'Avg/Session', value: `${report.avg_min_per_session}m`, emoji: '📊' },
-          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : '—', emoji: '🏅' },
+        ].map((stat) => (
+          <div key={stat.label} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 6px', textAlign: 'center' }}>
+            <div style={{ fontSize: 16 }}>{stat.emoji}</div>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#ffffff', lineHeight: 1.1 }}>{stat.value}</div>
+            <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 1 }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 16 }}>
+        {[
+          { label: 'Singles', value: report.total_matches_singles > 0 ? `${report.win_rate_singles}%` : '—', emoji: '👤' },
+          { label: 'Doubles', value: report.total_matches_doubles > 0 ? `${report.win_rate_doubles}%` : '—', emoji: '👥' },
         ].map((stat) => (
           <div key={stat.label} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 6px', textAlign: 'center' }}>
             <div style={{ fontSize: 16 }}>{stat.emoji}</div>
@@ -177,39 +189,52 @@ function NeonCard({ report, cardRef }: CardProps) {
       <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,255,221,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
 
       {/* Header */}
-      <div style={{ marginBottom: 18, paddingTop: 4 }}>
+      <div style={{ marginBottom: 14, paddingTop: 4 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: '#00ffdd', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 5 }}>◈ Monthly Wrap-Up ◈</div>
-        <div style={{ fontSize: 26, fontWeight: 900, color: '#ffffff', lineHeight: 1.05, letterSpacing: '-0.01em' }}>{report.month}</div>
+        <div style={{ fontSize: 24, fontWeight: 900, color: '#ffffff', lineHeight: 1.05, letterSpacing: '-0.01em' }}>{report.month}</div>
       </div>
 
-      {/* 2×2 big stat grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+      {/* 2×2 big stat grid + win rates below */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
         {[
           { label: 'Sessions', value: String(report.total_sessions), color: '#00ffdd' },
           { label: 'Hours', value: totalHours, color: '#ff0080' },
-          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : '—', color: '#ffe600' },
           { label: 'Avg/Session', value: `${report.avg_min_per_session}m`, color: '#bf80ff' },
+          { label: 'Matches', value: String(report.total_matches), color: '#ffe600' },
         ].map((stat) => (
-          <div key={stat.label} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${stat.color}33`, borderRadius: 10, padding: '12px 14px', boxShadow: `inset 0 0 20px ${stat.color}10` }}>
-            <div style={{ fontSize: 28, fontWeight: 900, color: stat.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{stat.value}</div>
-            <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{stat.label}</div>
+          <div key={stat.label} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${stat.color}33`, borderRadius: 10, padding: '10px 12px', boxShadow: `inset 0 0 20px ${stat.color}10` }}>
+            <div style={{ fontSize: 24, fontWeight: 900, color: stat.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{stat.value}</div>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Win rates row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+        {[
+          { label: 'Singles', value: report.total_matches_singles > 0 ? `${report.win_rate_singles}%` : '—', color: '#00ffdd' },
+          { label: 'Doubles', value: report.total_matches_doubles > 0 ? `${report.win_rate_doubles}%` : '—', color: '#ff0080' },
+        ].map((stat) => (
+          <div key={stat.label} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${stat.color}33`, borderRadius: 10, padding: '10px 12px', boxShadow: `inset 0 0 20px ${stat.color}10` }}>
+            <div style={{ fontSize: 24, fontWeight: 900, color: stat.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{stat.value}</div>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{stat.label}</div>
           </div>
         ))}
       </div>
 
       {/* Separator */}
-      <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,0,128,0.4), rgba(0,255,221,0.4), transparent)', marginBottom: 12 }} />
+      <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,0,128,0.4), rgba(0,255,221,0.4), transparent)', marginBottom: 10 }} />
 
       {/* Racquet usage */}
-      <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 10 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: '#00ffdd', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 8 }}>▸ Racquet Usage</div>
-        {usageTop5.slice(0, 4).map((rq, i) => {
+        {usageTop5.slice(0, 3).map((rq, i) => {
           const pct = usageTop5[0].sessions > 0 ? (rq.sessions / usageTop5[0].sessions) * 100 : 0
           return (
-            <div key={rq.racquet_id} style={{ marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                <span style={{ fontSize: 11, color: '#e2e8f0', fontWeight: 600 }}>{i === 0 ? '★ ' : ''}{rq.racquet_name}</span>
-                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>{rq.sessions}s · {fmtMin(rq.total_min)}</span>
+            <div key={rq.racquet_id} style={{ marginBottom: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
+                <span style={{ fontSize: 10, color: '#e2e8f0', fontWeight: 600 }}>{i === 0 ? '★ ' : ''}{rq.racquet_name}</span>
+                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{rq.sessions}s · {fmtMin(rq.total_min)}</span>
               </div>
               <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2 }}>
                 <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? '#00ffdd' : '#ff0080', borderRadius: 2 }} />
@@ -222,19 +247,19 @@ function NeonCard({ report, cardRef }: CardProps) {
       {/* Milestones */}
       {report.notable_results.length > 0 && (
         <div style={{ flex: 1, minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#ff0080', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 8 }}>▸ Milestones</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#ff0080', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 6 }}>▸ Milestones</div>
           {report.notable_results.slice(0, 4).map((s) => {
             const isWin = s.notable_tag.toLowerCase().includes('win')
             const isLoss = s.notable_tag.toLowerCase().includes('loss')
             const accentColor = isWin ? '#00ffdd' : isLoss ? '#ff0080' : '#ffe600'
             return (
-              <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 5, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
+              <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 9px', marginBottom: 4, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
                 <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.25, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
-                  <div style={{ fontSize: 9, lineHeight: 1.2, color: 'rgba(255,255,255,0.3)' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, lineHeight: 1.2, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
+                  <div style={{ fontSize: 8, lineHeight: 1.2, color: 'rgba(255,255,255,0.3)' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
                 </div>
-                <span style={{ fontSize: 8, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.05em', color: accentColor, border: `1px solid ${accentColor}`, borderRadius: 4, padding: '2px 5px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
+                <span style={{ fontSize: 7, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.05em', color: accentColor, border: `1px solid ${accentColor}`, borderRadius: 4, padding: '2px 5px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
               </div>
             )
           })}
@@ -288,11 +313,24 @@ function ClayCard({ report, cardRef }: CardProps) {
         {[
           { label: 'Sessions', value: String(report.total_sessions) },
           { label: 'Hours', value: totalHours },
-          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : '—' },
+          { label: 'Matches', value: String(report.total_matches) },
         ].map((stat, i) => (
           <div key={stat.label} style={{ textAlign: 'center', flex: 1, borderRight: i < 2 ? '1px solid rgba(245,158,11,0.2)' : 'none' }}>
             <div style={{ fontSize: 22, fontWeight: 700, color: '#f59e0b', lineHeight: 1, fontFamily: ffSans }}>{stat.value}</div>
             <div style={{ fontSize: 9, color: '#d97706', marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Win rates row */}
+      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: 10, padding: '14px 8px', marginBottom: 12 }}>
+        {[
+          { label: 'Singles', value: report.total_matches_singles > 0 ? `${report.win_rate_singles}%` : '—' },
+          { label: 'Doubles', value: report.total_matches_doubles > 0 ? `${report.win_rate_doubles}%` : '—' },
+        ].map((stat, i) => (
+          <div key={stat.label} style={{ textAlign: 'center', flex: 1, borderRight: i < 1 ? '1px solid rgba(217,119,6,0.2)' : 'none' }}>
+            <div style={{ fontSize: 22, fontWeight: 700, color: '#d97706', lineHeight: 1, fontFamily: ffSans }}>{stat.value}</div>
+            <div style={{ fontSize: 9, color: '#92400e', marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{stat.label}</div>
           </div>
         ))}
       </div>
@@ -381,44 +419,57 @@ function FrostCard({ report, cardRef }: CardProps) {
       <div style={{ position: 'absolute', bottom: -60, left: -60, width: 180, height: 180, borderRadius: '50%', background: 'rgba(14,165,233,0.06)', pointerEvents: 'none' }} />
 
       {/* Header */}
-      <div style={{ marginBottom: 20, paddingTop: 4 }}>
+      <div style={{ marginBottom: 14, paddingTop: 4 }}>
         <div style={{ fontSize: 10, fontWeight: 600, color: '#6366f1', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 3 }}>Monthly Wrap-Up</div>
-        <div style={{ fontSize: 26, fontWeight: 800, color: '#0f172a', lineHeight: 1.05, letterSpacing: '-0.02em' }}>{report.month}</div>
+        <div style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', lineHeight: 1.05, letterSpacing: '-0.02em' }}>{report.month}</div>
       </div>
 
       {/* 4-stat pill grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
         {[
           { label: 'Sessions', value: String(report.total_sessions), bg: '#ede9fe', color: '#4f46e5' },
           { label: 'Hours', value: totalHours, bg: '#e0f2fe', color: '#0369a1' },
-          { label: 'Win Rate', value: report.total_matches > 0 ? `${report.win_rate}%` : '—', bg: '#dcfce7', color: '#15803d' },
+          { label: 'Matches', value: String(report.total_matches), bg: '#fef3c7', color: '#92400e' },
           { label: 'Avg/Session', value: `${report.avg_min_per_session}m`, bg: '#fce7f3', color: '#be185d' },
         ].map((stat) => (
-          <div key={stat.label} style={{ background: stat.bg, borderRadius: 12, padding: '12px 14px' }}>
-            <div style={{ fontSize: 24, fontWeight: 800, color: stat.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{stat.value}</div>
-            <div style={{ fontSize: 10, color: stat.color, opacity: 0.7, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{stat.label}</div>
+          <div key={stat.label} style={{ background: stat.bg, borderRadius: 12, padding: '10px 12px' }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: stat.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{stat.value}</div>
+            <div style={{ fontSize: 9, color: stat.color, opacity: 0.7, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{stat.label}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Win rates row */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+        {[
+          { label: 'Singles', value: report.total_matches_singles > 0 ? `${report.win_rate_singles}%` : '—', bg: '#dcfce7', color: '#15803d' },
+          { label: 'Doubles', value: report.total_matches_doubles > 0 ? `${report.win_rate_doubles}%` : '—', bg: '#fed7aa', color: '#92400e' },
+        ].map((stat) => (
+          <div key={stat.label} style={{ background: stat.bg, borderRadius: 12, padding: '10px 12px' }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: stat.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{stat.value}</div>
+            <div style={{ fontSize: 9, color: stat.color, opacity: 0.7, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{stat.label}</div>
           </div>
         ))}
       </div>
 
       {/* Divider */}
-      <div style={{ height: 1, background: '#e2e8f0', marginBottom: 12 }} />
+      <div style={{ height: 1, background: '#e2e8f0', marginBottom: 10 }} />
 
       {/* Racquet usage */}
-      <div style={{ marginBottom: 12 }}>
+      <div style={{ marginBottom: 10 }}>
         <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>Racquet Usage</div>
-        {usageTop5.slice(0, 4).map((rq, i) => {
+        {usageTop5.slice(0, 3).map((rq, i) => {
           const pct = usageTop5[0].sessions > 0 ? (rq.sessions / usageTop5[0].sessions) * 100 : 0
           return (
-            <div key={rq.racquet_id} style={{ marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3, alignItems: 'center' }}>
+            <div key={rq.racquet_id} style={{ marginBottom: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2, alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  {i === 0 && <span style={{ fontSize: 9, fontWeight: 700, background: '#4f46e5', color: '#fff', borderRadius: 4, padding: '1px 5px' }}>TOP</span>}
-                  <span style={{ fontSize: 11, color: '#1e293b', fontWeight: 600 }}>{rq.racquet_name}</span>
+                  {i === 0 && <span style={{ fontSize: 8, fontWeight: 700, background: '#4f46e5', color: '#fff', borderRadius: 4, padding: '1px 5px' }}>TOP</span>}
+                  <span style={{ fontSize: 10, color: '#1e293b', fontWeight: 600 }}>{rq.racquet_name}</span>
                 </div>
-                <span style={{ fontSize: 10, color: '#64748b' }}>{rq.sessions}s · {fmtMin(rq.total_min)}</span>
+                <span style={{ fontSize: 9, color: '#64748b' }}>{rq.sessions}s · {fmtMin(rq.total_min)}</span>
               </div>
-              <div style={{ height: 5, background: '#e2e8f0', borderRadius: 3 }}>
+              <div style={{ height: 4, background: '#e2e8f0', borderRadius: 3 }}>
                 <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? '#4f46e5' : '#a5b4fc', borderRadius: 3 }} />
               </div>
             </div>
@@ -429,18 +480,18 @@ function FrostCard({ report, cardRef }: CardProps) {
       {/* Milestones */}
       {report.notable_results.length > 0 && (
         <div style={{ flex: 1, minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>Milestones</div>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 6 }}>Milestones</div>
           {report.notable_results.slice(0, 4).map((s) => {
             const isWin = s.notable_tag.toLowerCase().includes('win')
             const isLoss = s.notable_tag.toLowerCase().includes('loss')
             return (
-              <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 10px', marginBottom: 5, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 9px', marginBottom: 4, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                 <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.25, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
-                  <div style={{ fontSize: 9, lineHeight: 1.2, color: '#94a3b8' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, lineHeight: 1.2, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
+                  <div style={{ fontSize: 8, lineHeight: 1.2, color: '#94a3b8' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
                 </div>
-                <span style={{ fontSize: 8, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.04em', background: isWin ? '#dcfce7' : isLoss ? '#fee2e2' : '#fef3c7', color: isWin ? '#15803d' : isLoss ? '#dc2626' : '#b45309', borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
+                <span style={{ fontSize: 7, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.04em', background: isWin ? '#dcfce7' : isLoss ? '#fee2e2' : '#fef3c7', color: isWin ? '#15803d' : isLoss ? '#dc2626' : '#b45309', borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
               </div>
             )
           })}

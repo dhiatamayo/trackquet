@@ -1,4 +1,5 @@
 export type SessionType = 'match' | 'training'
+export type MatchType = 'singles' | 'doubles'
 
 export interface User {
   id: number
@@ -72,8 +73,14 @@ export interface Racquet {
   restring_suggestion: string
   usage_percent: number
   win_ratio: number
+  win_ratio_singles: number
+  win_ratio_doubles: number
   total_matches: number
+  total_matches_singles: number
+  total_matches_doubles: number
   win_matches: number
+  win_matches_singles: number
+  win_matches_doubles: number
   sessions?: Session[]
 }
 
@@ -91,6 +98,7 @@ export interface Session {
   match_result?: 'win' | 'loss' | ''
   match_score?: string
   opponent_racquet?: string
+  match_type?: MatchType
 }
 
 export interface CreateRacquetPayload {
@@ -118,6 +126,7 @@ export interface CreateSessionPayload {
   match_result?: 'win' | 'loss' | ''
   match_score?: string
   opponent_racquet?: string
+  match_type?: MatchType
 }
 
 export interface UpdateSessionPayload {
@@ -125,6 +134,7 @@ export interface UpdateSessionPayload {
   match_result?: 'win' | 'loss' | ''
   match_score?: string
   opponent_racquet?: string
+  match_type?: MatchType
 }
 
 export interface RestringPayload {
@@ -169,8 +179,14 @@ export interface MonthlyReport {
   total_minutes: number
   avg_min_per_session: number
   win_rate: number
+  win_rate_singles: number
+  win_rate_doubles: number
   total_wins: number
+  total_wins_singles: number
+  total_wins_doubles: number
   total_matches: number
+  total_matches_singles: number
+  total_matches_doubles: number
   racquet_usage: RacquetUsageStat[]
   notable_results: NotableSession[]
 }

@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import type { SessionType, StringRecord } from '../types'
+import type { SessionType, MatchType, StringRecord } from '../types'
 import { format, parseISO, startOfDay } from 'date-fns'
 
 interface Props {
@@ -16,6 +16,7 @@ interface Props {
     matchResult?: 'win' | 'loss' | ''
     matchScore?: string
     opponentRacquet?: string
+    matchType?: MatchType
   }) => void
   loading?: boolean
 }
@@ -32,6 +33,7 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
   const [matchResult, setMatchResult] = useState<'win' | 'loss' | ''>('')
   const [matchScore, setMatchScore] = useState('')
   const [opponentRacquet, setOpponentRacquet] = useState('')
+  const [matchType, setMatchType] = useState<MatchType>('singles')
 
   const selectedRecord = useMemo(
     () => stringRecords.find((r) => r.id === selectedRecordId),
@@ -62,7 +64,7 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
     e.preventDefault()
     if (dateError) return
     const totalMin = Math.max(1, parseInt(hours || '0') * 60 + parseInt(minutes || '0'))
-    onSave({ date, durationMin: totalMin, type, name, notes, stringRecordId: selectedRecordId, matchResult, matchScore, opponentRacquet })
+    onSave({ date, durationMin: totalMin, type, name, notes, stringRecordId: selectedRecordId, matchResult, matchScore, opponentRacquet, matchType })
   }
 
   return (
@@ -215,6 +217,26 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
           {type === 'match' && (
             <div className="space-y-3 border border-amber-200 bg-amber-50 rounded-xl p-4">
               <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Match Details</p>
+
+              <div>
+                <label className="label">Match Type</label>
+                <div className="flex gap-2">
+                  {(['singles', 'doubles'] as MatchType[]).map((mt) => (
+                    <button
+                      key={mt}
+                      type="button"
+                      onClick={() => setMatchType(mt)}
+                      className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        matchType === mt
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {mt === 'singles' ? '👤 Singles' : '👥 Doubles'}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div>
                 <label className="label">Result</label>

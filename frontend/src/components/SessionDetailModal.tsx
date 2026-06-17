@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
-import type { Session } from '../types'
+import type { Session, MatchType } from '../types'
 import { updateSession } from '../api/client'
 
 interface Props {
@@ -18,6 +18,7 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
   )
   const [matchScore, setMatchScore] = useState(session.match_score ?? '')
   const [opponentRacquet, setOpponentRacquet] = useState(session.opponent_racquet ?? '')
+  const [matchType, setMatchType] = useState<MatchType>((session.match_type as MatchType) ?? 'singles')
   const [notes, setNotes] = useState(session.notes ?? '')
   const [saving, setSaving] = useState(false)
 
@@ -25,6 +26,7 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
     matchResult !== (session.match_result ?? '') ||
     matchScore !== (session.match_score ?? '') ||
     opponentRacquet !== (session.opponent_racquet ?? '') ||
+    matchType !== (session.match_type ?? 'singles') ||
     notes !== (session.notes ?? '')
 
   const dateStr = (() => {
@@ -47,6 +49,7 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
         match_result: isMatch ? matchResult : undefined,
         match_score: isMatch ? matchScore : undefined,
         opponent_racquet: isMatch ? opponentRacquet : undefined,
+        match_type: isMatch ? matchType : undefined,
       })
       toast.success('Session updated')
       onUpdated(updated)
@@ -90,6 +93,13 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
             <span className="bg-gray-100 rounded-lg px-3 py-1.5 text-sm capitalize">
               <span className="font-semibold text-gray-800">{session.type}</span>
             </span>
+            {isMatch && session.match_type && (
+              <span className="bg-indigo-100 rounded-lg px-3 py-1.5 text-sm capitalize">
+                <span className="font-semibold text-indigo-700">
+                  {session.match_type === 'singles' ? '👤 Singles' : '👥 Doubles'}
+                </span>
+              </span>
+            )}
             {isMatch && session.match_result && (
               <span
                 className={`rounded-lg px-3 py-1.5 text-sm font-semibold capitalize ${
@@ -119,6 +129,26 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
           {isMatch && (
             <div className="space-y-3 border border-amber-200 bg-amber-50 rounded-xl p-4 mb-4">
               <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Match Details</p>
+
+              <div>
+                <label className="label">Match Type</label>
+                <div className="flex gap-2">
+                  {(['singles', 'doubles'] as MatchType[]).map((mt) => (
+                    <button
+                      key={mt}
+                      type="button"
+                      onClick={() => setMatchType(mt)}
+                      className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                        matchType === mt
+                          ? 'bg-indigo-600 text-white border-indigo-600'
+                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      {mt === 'singles' ? '👤 Singles' : '👥 Doubles'}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div>
                 <label className="label">Result</label>
