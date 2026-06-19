@@ -306,13 +306,13 @@ function ClayCard({ report, cardRef }: CardProps) {
       <div style={{ position: 'absolute', top: '35%', left: 0, right: 0, height: 1, background: 'rgba(245,158,11,0.07)', pointerEvents: 'none' }} />
 
       {/* Header */}
-      <div style={{ marginBottom: 18, textAlign: 'center' }}>
+      <div style={{ marginBottom: 14, textAlign: 'center' }}>
         <div style={{ fontSize: 9, fontWeight: 400, color: '#f59e0b', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 5 }}>─── Monthly Wrap-Up ───</div>
         <div style={{ fontSize: 24, fontWeight: 700, color: '#fef3c7', lineHeight: 1.1 }}>{report.month}</div>
       </div>
 
       {/* 3-stat row */}
-      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '14px 8px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '12px 8px', marginBottom: 10 }}>
         {[
           { label: 'Sessions', value: String(report.total_sessions) },
           { label: 'Hours', value: totalHours },
@@ -326,7 +326,7 @@ function ClayCard({ report, cardRef }: CardProps) {
       </div>
 
       {/* Win rates row */}
-      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: 10, padding: '14px 8px', marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: 10, padding: '12px 8px', marginBottom: 10 }}>
         {[
           { label: 'Singles', value: report.total_matches_singles > 0 ? `${report.win_rate_singles}%` : '—' },
           { label: 'Doubles', value: report.total_matches_doubles > 0 ? `${report.win_rate_doubles}%` : '—' },
@@ -339,26 +339,26 @@ function ClayCard({ report, cardRef }: CardProps) {
       </div>
 
       {/* Avg session */}
-      <div style={{ textAlign: 'center', marginBottom: 14 }}>
+      <div style={{ textAlign: 'center', marginBottom: 10 }}>
         <span style={{ fontSize: 10, color: '#d97706', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Avg. Session · </span>
         <span style={{ fontSize: 16, fontWeight: 700, color: '#fef3c7', fontFamily: ffSans }}>{report.avg_min_per_session} min</span>
       </div>
 
       {/* Divider */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
         <div style={{ flex: 1, height: 1, background: 'rgba(245,158,11,0.25)' }} />
         <span style={{ fontSize: 12 }}>🎾</span>
         <div style={{ flex: 1, height: 1, background: 'rgba(245,158,11,0.25)' }} />
       </div>
 
       {/* Racquet usage */}
-      <div style={{ marginBottom: 12 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 8 }}>Racquets in Play</div>
-        {usageTop5.slice(0, 4).map((rq, i) => {
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 9, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 6 }}>Racquet Usage</div>
+        {usageTop5.slice(0, 3).map((rq, i) => {
           const pct = usageTop5[0].sessions > 0 ? (rq.sessions / usageTop5[0].sessions) * 100 : 0
           return (
-            <div key={rq.racquet_id} style={{ marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+            <div key={rq.racquet_id} style={{ marginBottom: 6 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
                 <span style={{ fontSize: 11, color: '#fef3c7', fontFamily: ffSans }}>{i === 0 ? '👑 ' : ''}{rq.racquet_name}</span>
                 <span style={{ fontSize: 10, color: '#d97706', fontFamily: ffSans }}>{rq.sessions} sessions</span>
               </div>
@@ -372,16 +372,16 @@ function ClayCard({ report, cardRef }: CardProps) {
 
       {/* Milestones */}
       {report.notable_results.length > 0 && (
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 8 }}>Season Highlights</div>
+        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 6 }}>Milestones</div>
           {report.notable_results.slice(0, 4).map((s) => (
-            <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 10px', marginBottom: 5, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 8 }}>
-              <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
+            <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', marginBottom: 4, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 8 }}>
+              <span style={{ fontSize: 12 }}>{notableIcon(s.notable_tag)}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.25, color: '#fef3c7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.name || s.racquet_name}</div>
-                <div style={{ fontSize: 9, lineHeight: 1.2, color: '#d97706', fontFamily: ffSans }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
+                <div style={{ fontSize: 10, fontWeight: 600, lineHeight: 1.2, color: '#fef3c7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.name || s.racquet_name}</div>
+                <div style={{ fontSize: 8, lineHeight: 1.2, color: '#d97706', fontFamily: ffSans }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
               </div>
-              <span style={{ fontSize: 8, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'rgba(245,158,11,0.2)', color: '#f59e0b', borderRadius: 4, padding: '2px 6px', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.notable_tag}</span>
+              <span style={{ fontSize: 7, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'rgba(245,158,11,0.2)', color: '#f59e0b', borderRadius: 4, padding: '2px 5px', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.notable_tag}</span>
             </div>
           ))}
         </div>

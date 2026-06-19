@@ -11,9 +11,13 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
 
 func main() {
+	// Load .env file if present (ignored in production where env vars are set directly)
+	_ = godotenv.Load()
+
 	dsn := os.Getenv("DB_PATH")
 	if dsn == "" {
 		dsn = "trackquet.db"
