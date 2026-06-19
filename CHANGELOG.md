@@ -5,6 +5,18 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.5] — 2026-06-19
+
+### Changed
+
+#### Infrastructure
+- **Database migration: Render Postgres → Neon** — removed the Render-managed `databases` section from `render.yaml`. `DATABASE_URL` is now set manually (pointing to Neon free-tier Postgres with no 90-day expiry).
+
+#### Backend
+- **Added `godotenv`** — `.env` file is now auto-loaded on startup via `github.com/joho/godotenv`. Previously, environment variables in `.env` were silently ignored by the Go runtime, causing local runs to fall back to SQLite even when `DATABASE_URL` was set in the file.
+
+---
+
 ## [0.2.4] — 2026-06-19
 
 ### Changed
