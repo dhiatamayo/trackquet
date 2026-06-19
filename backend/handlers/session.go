@@ -169,8 +169,14 @@ func DeleteSession(c *gin.Context) {
 
 	// Subtract from StringRecord if linked
 	if session.StringRecordID > 0 {
-		database.DB.Model(&models.StringRecord{}).Where("id = ?", session.StringRecordID).
-			Update("total_minutes", gorm.Expr("MAX(0, total_minutes - ?)", session.DurationMin))
+		var sr models.StringRecord
+		if database.DB.First(&sr, session.StringRecordID).Error == nil {
+			sr.TotalMinutes -= session.DurationMin
+			if sr.TotalMinutes < 0 {
+				sr.TotalMinutes = 0
+			}
+			database.DB.Save(&sr)
+		}
 	}
 
 	database.DB.Delete(&session)
