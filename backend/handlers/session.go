@@ -89,6 +89,9 @@ func CreateSession(c *gin.Context) {
 		OpponentRacquet: req.OpponentRacquet,
 		MatchType:       req.MatchType,
 	}
+	if session.Type == models.SessionMatch && session.MatchType == "" {
+		session.MatchType = models.MatchTypeSingles
+	}
 
 	if req.StringRecordID > 0 {
 		// Caller specified a string record — validate it belongs to this racquet
@@ -244,7 +247,11 @@ func UpdateSession(c *gin.Context) {
 		session.MatchResult = req.MatchResult
 		session.MatchScore = req.MatchScore
 		session.OpponentRacquet = req.OpponentRacquet
-		session.MatchType = req.MatchType
+		if req.MatchType != "" {
+			session.MatchType = req.MatchType
+		} else if session.MatchType == "" {
+			session.MatchType = models.MatchTypeSingles
+		}
 	}
 
 	if err := database.DB.Save(&session).Error; err != nil {
