@@ -65,6 +65,7 @@ export default function RacquetDetail() {
     matchResult?: 'win' | 'loss' | ''
     matchScore?: string
     opponentRacquet?: string
+    matchType?: 'singles' | 'doubles'
   }) => {
     setSaving(true)
     try {
@@ -78,6 +79,7 @@ export default function RacquetDetail() {
         match_result: data.matchResult,
         match_score: data.matchScore,
         opponent_racquet: data.opponentRacquet,
+        match_type: data.matchType,
       })
       toast.success('Session logged!')
       setShowLog(false)
@@ -414,6 +416,12 @@ function SessionRow({ session, onDelete, onView }: { session: Session; onDelete:
           <span className="font-medium text-sm capitalize text-gray-800">{session.name || session.type}</span>
           <span className="text-xs text-gray-400">·</span>
           <span className="text-xs text-gray-500 capitalize">{session.type}</span>
+          {session.type === 'match' && session.match_type && (
+            <>
+              <span className="text-xs text-gray-400">·</span>
+              <span className="text-xs text-indigo-600 font-medium capitalize">{session.match_type}</span>
+            </>
+          )}
           <span className="text-xs text-gray-400">·</span>
           <span className="text-xs text-gray-500">{dateStr}</span>
           {session.match_result && (

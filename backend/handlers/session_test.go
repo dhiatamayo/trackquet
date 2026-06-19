@@ -90,6 +90,22 @@ func TestCreateSession_BackdatedBeforeStringStart(t *testing.T) {
 	assert.Equal(t, http.StatusCreated, w.Code)
 }
 
+func TestCreateSession_MatchDefaultsToSingles(t *testing.T) {
+	testhelper.InitTestDB()
+	r := setupSessionRouter()
+	rq, uid := seedRacquetWithUser(t)
+
+	w := testhelper.Do(r, testhelper.ReqAuth("POST",
+		fmt.Sprintf("/api/racquets/%d/sessions", rq.ID),
+		`{"date":"2026-05-20","duration_min":60,"type":"match","match_result":"win"}`,
+		uid))
+	assert.Equal(t, http.StatusCreated, w.Code)
+
+	var sess map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &sess))
+	assert.Equal(t, "singles", sess["match_type"])
+}
+
 func TestCreateSession_MissingRequiredFields(t *testing.T) {
 	testhelper.InitTestDB()
 	r := setupSessionRouter()
