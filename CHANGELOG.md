@@ -5,6 +5,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.4] — 2026-06-19
+
+### Changed
+
+#### Typography
+- **Custom font: Plus Jakarta Sans** — replaced the default Tailwind system font stack with [Plus Jakarta Sans](https://fonts.google.com/specimen/Plus+Jakarta+Sans) (variable, weights 200–800) loaded from Google Fonts. Applied globally via Tailwind's `fontFamily.sans` override.
+- **Monthly Report story cards** — all four themes (Aurora, Neon, Clay, Frost) now render in Plus Jakarta Sans instead of the previous Inter/Georgia fallbacks. The Clay theme no longer uses a serif font.
+- **PNG export font embedding** — changed `html-to-image` config from `skipFonts: true` to `skipFonts: false` so the custom font is inlined into exported story card PNGs.
+
+---
+
 ## [0.2.2] — 2026-06-17
 
 ### Added

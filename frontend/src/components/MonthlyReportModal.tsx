@@ -17,6 +17,9 @@ const THEMES: { id: Theme; label: string; emoji: string }[] = [
   { id: 'frost',  label: 'Frost',  emoji: '❄️' },
 ]
 
+// ─── font constant ───────────────────────────────────────────────────────────
+const FONT_SANS = "'Plus Jakarta Sans', 'Inter', 'Segoe UI', system-ui, sans-serif"
+
 // ─── shared helpers ──────────────────────────────────────────────────────────
 
 function fmtMin(min: number): string {
@@ -81,7 +84,7 @@ function AuroraCard({ report, cardRef }: CardProps) {
         width: 360, height: 640,
         background: 'linear-gradient(160deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
         borderRadius: 16, overflow: 'hidden',
-        fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+        fontFamily: FONT_SANS,
         color: '#f1f5f9', padding: '24px 20px 18px',
         display: 'flex', flexDirection: 'column', boxSizing: 'border-box', position: 'relative',
       }}
@@ -176,7 +179,7 @@ function NeonCard({ report, cardRef }: CardProps) {
         width: 360, height: 640,
         background: '#080808',
         borderRadius: 16, overflow: 'hidden',
-        fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+        fontFamily: FONT_SANS,
         color: '#ffffff', padding: '26px 20px 18px',
         display: 'flex', flexDirection: 'column', boxSizing: 'border-box', position: 'relative',
       }}
@@ -282,8 +285,8 @@ function NeonCard({ report, cardRef }: CardProps) {
 function ClayCard({ report, cardRef }: CardProps) {
   const totalHours = (report.total_minutes / 60).toFixed(1)
   const usageTop5 = report.racquet_usage.slice(0, 5)
-  const ff = "'Georgia', 'Times New Roman', serif"
-  const ffSans = "'Inter', 'Segoe UI', system-ui, sans-serif"
+  const ff = FONT_SANS
+  const ffSans = FONT_SANS
   return (
     <div
       ref={cardRef}
@@ -407,7 +410,7 @@ function FrostCard({ report, cardRef }: CardProps) {
         width: 360, height: 640,
         background: '#f8fafc',
         borderRadius: 16, overflow: 'hidden',
-        fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif",
+        fontFamily: FONT_SANS,
         color: '#0f172a', padding: '28px 22px 20px',
         display: 'flex', flexDirection: 'column', boxSizing: 'border-box', position: 'relative',
       }}
@@ -554,7 +557,7 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
       width: 360,
       height: el.offsetHeight,
       cacheBust: true,
-      skipFonts: true,      // system fonts are always available; skip inlining
+      skipFonts: false,     // embed Plus Jakarta Sans into exported PNG
     })
 
     const res = await fetch(dataUrl)
