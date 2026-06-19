@@ -5,6 +5,15 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.6] — 2026-06-19
+
+### Fixed
+
+#### String Record Usage Tracking
+- **Delete session not decrementing `total_minutes` on PostgreSQL** — the `DeleteSession` handler used `MAX(0, total_minutes - ?)` which is valid SQLite scalar syntax but not valid PostgreSQL (where `MAX` is aggregate-only). The expression silently failed on Postgres, leaving `total_minutes` stale after session deletion. Replaced with Go-side computation that works on both databases.
+
+---
+
 ## [0.2.5] — 2026-06-19
 
 ### Changed
