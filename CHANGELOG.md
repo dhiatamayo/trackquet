@@ -5,6 +5,16 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.2.7] — 2026-06-21
+
+### Fixed
+
+#### Session Logging
+- **PostgreSQL duplicate key on session insert** — the `sessions` table's `id` sequence had drifted behind the actual max ID (likely from a prior data migration), causing `duplicate key value violates unique constraint "sessions_pkey"` (500 error) when creating new sessions.
+- **Added startup sequence sync** — new `fixPostgresSequences()` runs on every PostgreSQL startup, resetting primary key sequences for all tables (`users`, `racquets`, `string_records`, `sessions`, `string_presets`) to `MAX(id) + 1`. Prevents this class of bug from recurring after any future data import or migration.
+
+---
+
 ## [0.2.6] — 2026-06-19
 
 ### Fixed

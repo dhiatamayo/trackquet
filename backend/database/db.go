@@ -38,8 +38,25 @@ func Init(dsn string) {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
 
+	// Fix PostgreSQL sequences that may be out of sync (e.g. after data imports)
+	if os.Getenv("DATABASE_URL") != "" {
+		fixPostgresSequences()
+	}
+
 	seedStringPresets()
 	log.Println("Database initialized and migrated.")
+}
+
+// fixPostgresSequences resets primary key sequences to avoid duplicate key errors
+// when the sequence gets out of sync with actual data (common after imports/migrations).
+func fixPostgresSequences() {
+	tables := []string{"users", "racquets", "string_records", "sessions", "string_presets"}
+	for _, table := range tables {
+		query := `SELECT setval(pg_get_serial_sequence('` + table + `', 'id'), COALESCE(MAX(id), 0) + 1, false) FROM ` + table
+		if err := DB.Exec(query).Error; err != nil {
+			log.Printf("Warning: could not fix sequence for %s: %v", table, err)
+		}
+	}
 }
 
 // seedStringPresets inserts well-known string presets on first run
