@@ -5,6 +5,37 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.0] — 2026-07-01
+
+### Added
+
+#### Match Tracker
+- **Full match session management** — create, view, update, and delete organized match sessions with multiple matchmaking formats
+- **6 matchmaking formats** — Americano, Mexicano, Super Mexicano, Team Americano, Mixed Americano, Team Mexicano
+- **Court-aware scheduling** — specify number of courts; matchups are distributed so players rotate with sit-outs and play counts stay balanced (±1 match)
+- **Odd player support** — Americano and Mixed Americano work with odd player counts; team formats still require even
+- **Per-matchup timing** — start/finish buttons on each individual matchup with a live running timer
+- **Live leaderboard** — cumulative points, point differential, and tiebreaker ranking (point diff → head-to-head)
+- **Score validation** — enforces win conditions (points-based or set-based) on score entry
+- **Add player mid-session** — add a new player to an active session; new matchups are generated and shuffled with unplayed ones
+- **Auto-assigned court numbers** — courts cycle 1..N across matchups in each round
+- **Delete match session** — with confirmation dialog and full cascade delete
+- **Home page navigation** — new landing page with "My Racquets" and "My Matches" cards
+- **Context-aware breadcrumbs** — Layout shows correct page title based on route
+
+#### Backend
+- **4 new GORM models** — MatchSession, MatchPlayer, Matchup, MatchupPlayer with auto-migration
+- **11 REST API endpoints** — full CRUD for sessions, matchups, leaderboard, timing, and player management
+- **Property-based tests** — 11 PBTs covering schedule completeness, tiebreaker ordering, score validation, gender constraints, and more
+- **Integration tests** — CRUD flow, cascade delete, user isolation, score recalculation, round generation
+
+#### Frontend
+- **7 new components** — CreateMatchModal, PlayerInput, ScoreInput, Leaderboard, DrawSchedule, MatchupDetailModal, Home
+- **3 new pages** — Home, MatchList, MatchSessionDetail
+- **Match API client** — typed functions for all match endpoints
+
+---
+
 ## [0.2.7] — 2026-06-21
 
 ### Fixed

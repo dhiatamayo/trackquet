@@ -91,6 +91,26 @@ func main() {
 
 			// Monthly report
 			protected.GET("/reports/monthly", handlers.GetMonthlyReport)
+
+			// Match sessions
+			protected.GET("/matches", handlers.ListMatchSessions)
+			protected.POST("/matches", handlers.CreateMatchSession)
+			protected.GET("/matches/:id", handlers.GetMatchSession)
+			protected.PUT("/matches/:id", handlers.UpdateMatchSession)
+			protected.DELETE("/matches/:id", handlers.DeleteMatchSession)
+			protected.POST("/matches/:id/start", handlers.StartMatchSession)
+			protected.POST("/matches/:id/finish", handlers.FinishMatchSession)
+			protected.POST("/matches/:id/players", handlers.AddPlayer)
+
+			// Matchups (nested under match session)
+			protected.GET("/matches/:id/matchups", handlers.ListMatchups)
+			protected.GET("/matches/:id/matchups/:matchupId", handlers.GetMatchup)
+			protected.PUT("/matches/:id/matchups/:matchupId", handlers.UpdateMatchup)
+			protected.POST("/matches/:id/matchups/:matchupId/start", handlers.StartMatchup)
+			protected.POST("/matches/:id/matchups/:matchupId/finish", handlers.FinishMatchup)
+
+			// Leaderboard
+			protected.GET("/matches/:id/leaderboard", handlers.GetLeaderboard)
 		}
 	}
 
