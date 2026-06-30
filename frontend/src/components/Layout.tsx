@@ -12,6 +12,14 @@ export default function Layout({ children }: Props) {
   const { user, logout } = useAuth()
   const isHome = location.pathname === '/'
 
+  const getBreadcrumbLabel = (path: string): string => {
+    if (path === '/dashboard') return 'My Racquets'
+    if (path === '/matches') return 'My Matches'
+    if (path.startsWith('/matches/')) return 'Match Session'
+    if (path.startsWith('/racquets/')) return 'Racquet Detail'
+    return 'Page'
+  }
+
   const handleLogout = () => {
     logout()
     navigate('/login', { replace: true })
@@ -52,7 +60,7 @@ export default function Layout({ children }: Props) {
             <Link to="/" className="hover:text-court-600">
               Home
             </Link>{' '}
-            / <span className="text-gray-900">Racquet Detail</span>
+            / <span className="text-gray-900">{getBreadcrumbLabel(location.pathname)}</span>
           </div>
         </div>
       )}

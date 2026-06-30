@@ -33,7 +33,8 @@ func Init(dsn string) {
 		log.Fatalf("failed to connect to database: %v", err)
 	}
 
-	err = DB.AutoMigrate(&models.User{}, &models.Racquet{}, &models.StringRecord{}, &models.Session{}, &models.StringPreset{})
+	err = DB.AutoMigrate(&models.User{}, &models.Racquet{}, &models.StringRecord{}, &models.Session{}, &models.StringPreset{},
+		&models.MatchSession{}, &models.MatchPlayer{}, &models.Matchup{}, &models.MatchupPlayer{})
 	if err != nil {
 		log.Fatalf("failed to migrate database: %v", err)
 	}
@@ -50,7 +51,8 @@ func Init(dsn string) {
 // fixPostgresSequences resets primary key sequences to avoid duplicate key errors
 // when the sequence gets out of sync with actual data (common after imports/migrations).
 func fixPostgresSequences() {
-	tables := []string{"users", "racquets", "string_records", "sessions", "string_presets"}
+	tables := []string{"users", "racquets", "string_records", "sessions", "string_presets",
+		"match_sessions", "match_players", "matchups", "matchup_players"}
 	for _, table := range tables {
 		query := `SELECT setval(pg_get_serial_sequence('` + table + `', 'id'), COALESCE(MAX(id), 0) + 1, false) FROM ` + table
 		if err := DB.Exec(query).Error; err != nil {
