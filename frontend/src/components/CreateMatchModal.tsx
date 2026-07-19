@@ -304,14 +304,23 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
             {/* Number of Courts */}
             <div>
               <label className="label">Number of Courts</label>
-              <input
-                type="number"
-                min="1"
-                max="20"
-                className="input w-24"
-                value={numCourts}
-                onChange={(e) => setNumCourts(Math.max(1, parseInt(e.target.value) || 1))}
-              />
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setNumCourts(Math.max(1, numCourts - 1))}
+                  className="w-10 h-10 rounded-lg border border-gray-300 text-lg font-bold text-gray-700 hover:bg-gray-100 flex items-center justify-center"
+                >
+                  −
+                </button>
+                <span className="text-lg font-semibold w-8 text-center">{numCourts}</span>
+                <button
+                  type="button"
+                  onClick={() => setNumCourts(Math.min(20, numCourts + 1))}
+                  className="w-10 h-10 rounded-lg border border-gray-300 text-lg font-bold text-gray-700 hover:bg-gray-100 flex items-center justify-center"
+                >
+                  +
+                </button>
+              </div>
               <p className="text-xs text-gray-500 mt-1">Courts are auto-assigned to matchups</p>
             </div>
 
