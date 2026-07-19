@@ -5,6 +5,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.1] — 2026-07-01
+
+### Fixed
+
+- **Mobile court selector** — replaced number input with large tap-friendly +/− buttons; increment/decrement spinners were invisible on Android Chrome
+
+---
+
 ## [0.3.0] — 2026-07-01
 
 ### Added
