@@ -31,12 +31,12 @@ export default function DrawSchedule({ matchups, players, onMatchupClick }: Draw
     return player?.name ?? 'Unknown'
   }
 
-  // Get player names for a given side
-  const getSideNames = (matchupPlayers: MatchupPlayer[] | undefined, side: 'A' | 'B'): string => {
-    if (!matchupPlayers || matchupPlayers.length === 0) return 'TBD'
+  // Get player names for a given side, as a list (one entry per player)
+  const getSideNames = (matchupPlayers: MatchupPlayer[] | undefined, side: 'A' | 'B'): string[] => {
+    if (!matchupPlayers || matchupPlayers.length === 0) return ['TBD']
     const sidePlayers = matchupPlayers.filter((mp) => mp.side === side)
-    if (sidePlayers.length === 0) return 'TBD'
-    return sidePlayers.map((mp) => getPlayerName(mp.match_player_id)).join(' & ')
+    if (sidePlayers.length === 0) return ['TBD']
+    return sidePlayers.map((mp) => getPlayerName(mp.match_player_id))
   }
 
   // Format score display
@@ -75,19 +75,33 @@ export default function DrawSchedule({ matchups, players, onMatchupClick }: Draw
                   onClick={() => onMatchupClick(matchup)}
                   className="w-full text-left card p-4 hover:shadow-md transition-shadow cursor-pointer"
                 >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <span className="font-medium text-gray-900 truncate block">{sideA}</span>
+                  <div className="flex items-start justify-between gap-2 sm:gap-4">
+                    <div className="flex-1 min-w-0 space-y-0.5">
+                      {sideA.map((name, idx) => (
+                        <span
+                          key={idx}
+                          className="font-medium text-gray-900 text-sm sm:text-base leading-snug break-words block"
+                        >
+                          {name}
+                        </span>
+                      ))}
                     </div>
-                    <div className="shrink-0 text-center px-3">
+                    <div className="shrink-0 text-center px-1 sm:px-3 pt-0.5">
                       {score ? (
                         <span className="font-bold text-gray-900 text-sm">{score}</span>
                       ) : (
-                        <span className="text-xs text-gray-400">No score</span>
+                        <span className="text-xs text-gray-400 whitespace-nowrap">No score</span>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0 text-right">
-                      <span className="font-medium text-gray-900 truncate block">{sideB}</span>
+                    <div className="flex-1 min-w-0 text-right space-y-0.5">
+                      {sideB.map((name, idx) => (
+                        <span
+                          key={idx}
+                          className="font-medium text-gray-900 text-sm sm:text-base leading-snug break-words block"
+                        >
+                          {name}
+                        </span>
+                      ))}
                     </div>
                   </div>
                   {matchup.court_number != null && (
