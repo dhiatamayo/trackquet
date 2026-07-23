@@ -5,6 +5,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.3.2] — 2026-07-23
+
+### Fixed
+
+- **Doubles player names on mobile** — team names in the draw schedule (e.g. "Mayo & Galih") were truncated with an ellipsis on small screens; each player now renders on its own line so full names stay visible
+
+---
+
 ## [0.3.1] — 2026-07-01
 
 ### Fixed
