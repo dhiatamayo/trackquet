@@ -260,5 +260,6 @@ export interface LeaderboardEntry {
   player_name: string
   total_points: number
   point_diff: number
+  games_played: number
   rank: number
 }

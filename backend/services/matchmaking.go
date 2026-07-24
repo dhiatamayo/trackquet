@@ -2,6 +2,7 @@ package services
 
 import (
 	"math/rand"
+	"sort"
 	"trackquet/models"
 )
 
@@ -369,51 +370,61 @@ func (m *Matchmaking) GenerateAmericanoScheduleWithCourts(players []models.Match
 
 // assignSinglesPairingsToRounds places pairings into rounds with at most numCourts matches
 // per round, ensuring no player appears twice in the same round.
-// Balances play counts so each player's match count differs by at most 1 from any other.
+// Uses "longest wait" priority: players who haven't played for the most rounds get priority.
+// This ensures fair rotation where players who just played sit out next round.
 func (m *Matchmaking) assignSinglesPairingsToRounds(pairings [][2]uint, numCourts int) []models.Matchup {
 	var matchups []models.Matchup
 	assigned := make([]bool, len(pairings))
-	playCounts := make(map[uint]int) // track how many matches each player has been assigned
+	// lastPlayedRound[playerID] = the last round number this player was scheduled in (0 = never)
+	lastPlayedRound := make(map[uint]int)
 	round := 1
 
-	for {
+	totalAssigned := 0
+	totalPairings := len(pairings)
+
+	for totalAssigned < totalPairings {
 		playersInRound := make(map[uint]bool)
 		matchesInRound := 0
 
-		// Find the minimum play count among all players in remaining pairings
-		minPlays := -1
+		// Score each unassigned pairing by "wait priority":
+		// priority = min(round - lastPlayedRound[a], round - lastPlayedRound[b])
+		// Higher priority = both players have waited longer
+		type scoredPairing struct {
+			idx      int
+			priority int
+		}
+		var candidates []scoredPairing
 		for i, pairing := range pairings {
 			if assigned[i] {
 				continue
 			}
-			for _, pid := range pairing {
-				if minPlays == -1 || playCounts[pid] < minPlays {
-					minPlays = playCounts[pid]
-				}
-			}
+			waitA := round - lastPlayedRound[pairing[0]]
+			waitB := round - lastPlayedRound[pairing[1]]
+			// Use sum of waits as priority so pairings with both players waiting long are preferred
+			candidates = append(candidates, scoredPairing{idx: i, priority: waitA + waitB})
 		}
 
-		// Prioritize pairings where both players have the lowest play counts
-		for i, pairing := range pairings {
-			if assigned[i] {
-				continue
-			}
+		// Sort by priority descending (longest combined wait first)
+		sort.Slice(candidates, func(i, j int) bool {
+			return candidates[i].priority > candidates[j].priority
+		})
+
+		// Greedily assign top-priority pairings that don't conflict
+		for _, c := range candidates {
 			if matchesInRound >= numCourts {
 				break
 			}
+			pairing := pairings[c.idx]
 			if playersInRound[pairing[0]] || playersInRound[pairing[1]] {
 				continue
 			}
-			// Only allow this pairing if both players are within 1 of the minimum
-			if playCounts[pairing[0]] > minPlays+1 || playCounts[pairing[1]] > minPlays+1 {
-				continue
-			}
-			assigned[i] = true
+			assigned[c.idx] = true
 			playersInRound[pairing[0]] = true
 			playersInRound[pairing[1]] = true
-			playCounts[pairing[0]]++
-			playCounts[pairing[1]]++
+			lastPlayedRound[pairing[0]] = round
+			lastPlayedRound[pairing[1]] = round
 			matchesInRound++
+			totalAssigned++
 
 			matchups = append(matchups, models.Matchup{
 				Round: round,
@@ -424,37 +435,8 @@ func (m *Matchmaking) assignSinglesPairingsToRounds(pairings [][2]uint, numCourt
 			})
 		}
 
-		// If we couldn't fill using balanced selection, fall back to any available pairing
-		if matchesInRound < numCourts {
-			for i, pairing := range pairings {
-				if assigned[i] {
-					continue
-				}
-				if matchesInRound >= numCourts {
-					break
-				}
-				if playersInRound[pairing[0]] || playersInRound[pairing[1]] {
-					continue
-				}
-				assigned[i] = true
-				playersInRound[pairing[0]] = true
-				playersInRound[pairing[1]] = true
-				playCounts[pairing[0]]++
-				playCounts[pairing[1]]++
-				matchesInRound++
-
-				matchups = append(matchups, models.Matchup{
-					Round: round,
-					Players: []models.MatchupPlayer{
-						{MatchPlayerID: pairing[0], Side: models.SideA},
-						{MatchPlayerID: pairing[1], Side: models.SideB},
-					},
-				})
-			}
-		}
-
 		if matchesInRound == 0 {
-			break
+			break // safety: no progress possible
 		}
 		round++
 	}
@@ -514,7 +496,7 @@ func (m *Matchmaking) redistributeIntoCourts(schedule []models.Matchup, numCourt
 }
 
 // redistributeIntoCourtsBalanced redistributes matchups into court-limited rounds
-// while balancing play counts so each player's match count differs by at most 1.
+// using "longest wait" priority so players who haven't played recently get priority.
 func (m *Matchmaking) redistributeIntoCourtsBalanced(schedule []models.Matchup, numCourts int) []models.Matchup {
 	rand.Shuffle(len(schedule), func(i, j int) {
 		schedule[i], schedule[j] = schedule[j], schedule[i]
@@ -522,88 +504,59 @@ func (m *Matchmaking) redistributeIntoCourtsBalanced(schedule []models.Matchup, 
 
 	var result []models.Matchup
 	assigned := make([]bool, len(schedule))
-	playCounts := make(map[uint]int)
+	lastPlayedRound := make(map[uint]int)
 	round := 1
+	totalAssigned := 0
 
-	for {
+	for totalAssigned < len(schedule) {
 		playersInRound := make(map[uint]bool)
 		matchesInRound := 0
 
-		// Find min play count among players in unassigned matchups
-		minPlays := -1
+		// Score each unassigned matchup by combined wait of all its players
+		type scored struct {
+			idx      int
+			priority int
+		}
+		var candidates []scored
 		for i := range schedule {
 			if assigned[i] {
 				continue
 			}
+			totalWait := 0
 			for _, mp := range schedule[i].Players {
-				if minPlays == -1 || playCounts[mp.MatchPlayerID] < minPlays {
-					minPlays = playCounts[mp.MatchPlayerID]
-				}
+				totalWait += round - lastPlayedRound[mp.MatchPlayerID]
 			}
+			candidates = append(candidates, scored{idx: i, priority: totalWait})
 		}
 
-		// First pass: prioritize matchups where all players are within ±1 of min
-		for i := range schedule {
-			if assigned[i] {
-				continue
-			}
+		sort.Slice(candidates, func(i, j int) bool {
+			return candidates[i].priority > candidates[j].priority
+		})
+
+		for _, c := range candidates {
 			if matchesInRound >= numCourts {
 				break
 			}
 			conflict := false
-			overPlayed := false
-			for _, mp := range schedule[i].Players {
+			for _, mp := range schedule[c.idx].Players {
 				if playersInRound[mp.MatchPlayerID] {
 					conflict = true
 					break
 				}
-				if playCounts[mp.MatchPlayerID] > minPlays+1 {
-					overPlayed = true
-				}
 			}
-			if conflict || overPlayed {
+			if conflict {
 				continue
 			}
-			assigned[i] = true
+			assigned[c.idx] = true
 			matchesInRound++
-			for _, mp := range schedule[i].Players {
+			totalAssigned++
+			for _, mp := range schedule[c.idx].Players {
 				playersInRound[mp.MatchPlayerID] = true
-				playCounts[mp.MatchPlayerID]++
+				lastPlayedRound[mp.MatchPlayerID] = round
 			}
-			matchup := schedule[i]
+			matchup := schedule[c.idx]
 			matchup.Round = round
 			result = append(result, matchup)
-		}
-
-		// Second pass: fill remaining court slots with any available
-		if matchesInRound < numCourts {
-			for i := range schedule {
-				if assigned[i] {
-					continue
-				}
-				if matchesInRound >= numCourts {
-					break
-				}
-				conflict := false
-				for _, mp := range schedule[i].Players {
-					if playersInRound[mp.MatchPlayerID] {
-						conflict = true
-						break
-					}
-				}
-				if conflict {
-					continue
-				}
-				assigned[i] = true
-				matchesInRound++
-				for _, mp := range schedule[i].Players {
-					playersInRound[mp.MatchPlayerID] = true
-					playCounts[mp.MatchPlayerID]++
-				}
-				matchup := schedule[i]
-				matchup.Round = round
-				result = append(result, matchup)
-			}
 		}
 
 		if matchesInRound == 0 {

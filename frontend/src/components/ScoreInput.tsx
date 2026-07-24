@@ -37,11 +37,9 @@ export function validateScore(
   const target = winConditionValue
 
   if (winConditionType === 'points') {
-    // Points-based: one side must equal the target, the other must be >= 0 and < target
-    const aWins = scoreA === target && scoreB >= 0 && scoreB < target
-    const bWins = scoreB === target && scoreA >= 0 && scoreA < target
-    if (!aWins && !bWins) {
-      return `One side must score exactly ${target} points and the other must be less than ${target}`
+    // Points-based: both scores must sum to the target (total points game)
+    if (scoreA + scoreB !== target) {
+      return `Scores must sum to ${target} (total points game)`
     }
   } else {
     // Set-based (Race to N): one side must equal N, the other must be >= 0 and < N
@@ -73,7 +71,18 @@ export default function ScoreInput({
       const newA = side === 'A' ? value : scoreSideA
       const newB = side === 'B' ? value : scoreSideB
 
-      onChange(newA, newB)
+      // Auto-fill the other side for points-based (total points) mode
+      if (winConditionType === 'points' && value !== null) {
+        if (side === 'A' && value >= 0 && value <= winConditionValue) {
+          onChange(value, winConditionValue - value)
+        } else if (side === 'B' && value >= 0 && value <= winConditionValue) {
+          onChange(winConditionValue - value, value)
+        } else {
+          onChange(newA, newB)
+        }
+      } else {
+        onChange(newA, newB)
+      }
 
       // Clear error while typing
       if (touched) {
