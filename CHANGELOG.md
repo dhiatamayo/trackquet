@@ -13,6 +13,32 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [0.4.0] — 2026-07-24
+
+### Added
+
+- **Games Played (GP) column** — leaderboard now shows how many completed matches each player has played
+- **Share Leaderboard** — text-based share via native share sheet on mobile, clipboard on desktop
+- **Story Image export** — generates a 1080×1920 (9:16) Instagram Story PNG with styled leaderboard
+- **Round-by-round navigation** — draw schedule shows one round at a time with ← Prev / Next → buttons
+- **Waiting players display** — shows who's sitting out each round and who played the previous round
+- **Add player mid-session** — add new players to an active session; new matchups are generated and shuffled with unplayed ones
+- **Delete match session** — with confirmation dialog from the session detail page
+- **Odd player support** — Americano and Mixed Americano now work with odd player counts
+
+### Changed
+
+- **Points-based scoring** — now uses total points (scores must sum to target, e.g. 16+5=21), with auto-fill of the other side
+- **Fair rotation algorithm** — uses "longest wait" priority so players who sat out longest play next round
+- **Mobile court selector** — replaced number input with large +/− tap buttons
+
+### Fixed
+
+- **Court-aware scheduling** — properly handles odd player counts in doubles Americano
+- **Story image proportions** — GP column and row spacing balanced for all player counts
+
+---
+
 ## [0.3.1] — 2026-07-01
 
 ### Fixed
