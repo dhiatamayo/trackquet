@@ -1061,12 +1061,18 @@ func validateScore(scoreA, scoreB int, winType models.WinConditionType, winValue
 		return "scores must be non-negative integers"
 	}
 
-	// At least one side must equal the target value (one side must have "won")
+	if winType == models.WinConditionPoints {
+		// Points-based: both scores must sum to the target value (total points game)
+		if scoreA+scoreB != winValue {
+			return fmt.Sprintf("scores must sum to %d for a %d-point game", winValue, winValue)
+		}
+		return ""
+	}
+
+	// Set-based (Race to N): one side must equal N, the other must be less than N
 	if scoreA != winValue && scoreB != winValue {
 		return fmt.Sprintf("score does not conform to win condition: one side must equal %d", winValue)
 	}
-
-	// The losing side must be strictly less than the target
 	if scoreA == winValue && scoreB >= winValue {
 		return fmt.Sprintf("score does not conform to win condition: losing side must be less than %d", winValue)
 	}

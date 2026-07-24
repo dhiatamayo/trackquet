@@ -204,7 +204,7 @@ export default function MatchSessionDetail() {
           {/* Leaderboard */}
           <div className="card p-5">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Leaderboard</h2>
-            <Leaderboard entries={leaderboard} loading={leaderboardLoading} />
+            <Leaderboard entries={leaderboard} loading={leaderboardLoading} sessionName={session.name} />
           </div>
         </div>
       </div>

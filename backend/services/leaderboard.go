@@ -12,6 +12,7 @@ type LeaderboardEntry struct {
 	PlayerName  string `json:"player_name"`
 	TotalPoints int    `json:"total_points"`
 	PointDiff   int    `json:"point_diff"`
+	GamesPlayed int    `json:"games_played"`
 	Rank        int    `json:"rank"`
 }
 
@@ -31,6 +32,7 @@ func CalculateLeaderboard(players []models.MatchPlayer, matchups []models.Matchu
 		playerName  string
 		totalPoints int
 		pointDiff   int
+		gamesPlayed int
 	}
 
 	statsMap := make(map[uint]*playerStats, len(players))
@@ -74,6 +76,7 @@ func CalculateLeaderboard(players []models.MatchPlayer, matchups []models.Matchu
 			if s, ok := statsMap[pid]; ok {
 				s.totalPoints += scoreA
 				s.pointDiff += scoreA - scoreB
+				s.gamesPlayed++
 			}
 			// Update head-to-head: A players scored scoreA against B players, conceded scoreB
 			for _, oppID := range sideBPlayers {
@@ -86,6 +89,7 @@ func CalculateLeaderboard(players []models.MatchPlayer, matchups []models.Matchu
 			if s, ok := statsMap[pid]; ok {
 				s.totalPoints += scoreB
 				s.pointDiff += scoreB - scoreA
+				s.gamesPlayed++
 			}
 			// Update head-to-head: B players scored scoreB against A players, conceded scoreA
 			for _, oppID := range sideAPlayers {
@@ -103,6 +107,7 @@ func CalculateLeaderboard(players []models.MatchPlayer, matchups []models.Matchu
 			PlayerName:  s.playerName,
 			TotalPoints: s.totalPoints,
 			PointDiff:   s.pointDiff,
+			GamesPlayed: s.gamesPlayed,
 		})
 	}
 
