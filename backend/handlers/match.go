@@ -561,32 +561,28 @@ func AddPlayer(c *gin.Context) {
 			})
 		}
 	} else {
-		// Doubles: generate matchups where the new player partners with each existing player
-		// against other pairs (simplified: just generate new pairings involving the new player)
-		var pairings [][2]uint
-		for _, ep := range existingPlayers {
-			pairings = append(pairings, [2]uint{newPlayer.ID, ep.ID})
-		}
-		rand.Shuffle(len(pairings), func(i, j int) {
-			pairings[i], pairings[j] = pairings[j], pairings[i]
-		})
-		// Pair up partnerships into 2v2 matchups
-		for i := 0; i+1 < len(pairings); i += 2 {
-			// Check no overlap (new player can't be on both sides)
-			a := pairings[i]
-			b := pairings[i+1]
-			if a[0] == b[0] || a[0] == b[1] || a[1] == b[0] || a[1] == b[1] {
-				continue
-			}
-			newMatchups = append(newMatchups, models.Matchup{
-				MatchSessionID: session.ID,
-				Players: []models.MatchupPlayer{
-					{MatchPlayerID: a[0], Side: models.SideA},
-					{MatchPlayerID: a[1], Side: models.SideA},
-					{MatchPlayerID: b[0], Side: models.SideB},
-					{MatchPlayerID: b[1], Side: models.SideB},
-				},
+		// Doubles: for each existing player as the new player's partner, create one matchup
+		// against the next two existing players (using modular indexing so that every
+		// existing player appears as partner exactly once and opponent pairs don't repeat).
+		n := len(existingPlayers)
+		if n >= 3 {
+			rand.Shuffle(n, func(i, j int) {
+				existingPlayers[i], existingPlayers[j] = existingPlayers[j], existingPlayers[i]
 			})
+			for i := 0; i < n; i++ {
+				partner := existingPlayers[i]
+				opp1 := existingPlayers[(i+1)%n]
+				opp2 := existingPlayers[(i+2)%n]
+				newMatchups = append(newMatchups, models.Matchup{
+					MatchSessionID: session.ID,
+					Players: []models.MatchupPlayer{
+						{MatchPlayerID: newPlayer.ID, Side: models.SideA},
+						{MatchPlayerID: partner.ID, Side: models.SideA},
+						{MatchPlayerID: opp1.ID, Side: models.SideB},
+						{MatchPlayerID: opp2.ID, Side: models.SideB},
+					},
+				})
+			}
 		}
 	}
 
