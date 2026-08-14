@@ -26,7 +26,7 @@ export default function DrawSchedule({ matchups, players, onMatchupClick }: Draw
   const currentMatchups = roundsMap[currentRound] ?? []
 
   // Determine which players are playing and waiting in this round
-  const { playingIds, waitingPlayers } = useMemo(() => {
+  const { waitingPlayers } = useMemo(() => {
     const playing = new Set<number>()
     for (const m of currentMatchups) {
       for (const mp of m.players ?? []) {
