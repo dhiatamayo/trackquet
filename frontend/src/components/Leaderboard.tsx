@@ -20,25 +20,6 @@ export default function Leaderboard({ entries, loading, sessionName }: Props) {
     return `${title}\n\n${lines.join('\n')}\n\n📊 Tracked with Trackquet`
   }, [entries, sessionName])
 
-  const handleShare = async () => {
-    const text = generateShareText()
-    if (!text) return
-
-    if (shareSupported) {
-      try {
-        await navigator.share({ title: 'Leaderboard', text })
-      } catch (err) {
-        if (err instanceof Error && err.name !== 'AbortError') {
-          await navigator.clipboard.writeText(text)
-          toast.success('Copied to clipboard')
-        }
-      }
-    } else {
-      // Desktop: generate a PDF via print dialog
-      handlePDF()
-    }
-  }
-
   const handlePDF = () => {
     // Generate a 1080x1920 (9:16) Instagram Story image using canvas
     const canvas = document.createElement('canvas')
