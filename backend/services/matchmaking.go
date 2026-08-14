@@ -297,71 +297,37 @@ func (m *Matchmaking) GenerateAmericanoScheduleWithCourts(players []models.Match
 		}
 	}
 
-	// For odd player counts (or if the above failed), generate matchups by
-	// creating all partnership pairs and combining them into 2v2 matchups
+	// For odd player counts: add a ghost player (index n) to make the count even,
+	// then use the circle-method round-robin. Pairs that include the ghost represent
+	// the sit-out slot for that round — they are filtered out before building matchups.
 	if n < 4 {
 		return nil
 	}
 
-	type doublesMatchup struct {
-		sideA [2]uint
-		sideB [2]uint
-	}
+	ghostIdx := n
+	rrRounds := m.roundRobinPairs(n + 1)
 
-	// Generate all unique 2v2 combinations where each partnership pair plays together
-	// We want every pair of players to partner at least once
-	// Strategy: generate all partnership pairs, then pair them up into matchups
-	var partnerships [][2]int // indices into players
-	for i := 0; i < n; i++ {
-		for j := i + 1; j < n; j++ {
-			partnerships = append(partnerships, [2]int{i, j})
-		}
-	}
-
-	// Shuffle partnerships
-	rand.Shuffle(len(partnerships), func(i, j int) {
-		partnerships[i], partnerships[j] = partnerships[j], partnerships[i]
-	})
-
-	// Greedily pair partnerships into matchups (no player overlap within a matchup)
-	var allMatchups []doublesMatchup
-	used := make([]bool, len(partnerships))
-
-	for i := 0; i < len(partnerships); i++ {
-		if used[i] {
-			continue
-		}
-		for j := i + 1; j < len(partnerships); j++ {
-			if used[j] {
-				continue
-			}
-			// Check no player overlap
-			a := partnerships[i]
-			b := partnerships[j]
-			if a[0] == b[0] || a[0] == b[1] || a[1] == b[0] || a[1] == b[1] {
-				continue
-			}
-			used[i] = true
-			used[j] = true
-			allMatchups = append(allMatchups, doublesMatchup{
-				sideA: [2]uint{players[a[0]].ID, players[a[1]].ID},
-				sideB: [2]uint{players[b[0]].ID, players[b[1]].ID},
-			})
-			break
-		}
-	}
-
-	// Convert to Matchup structs
 	var schedule []models.Matchup
-	for _, dm := range allMatchups {
-		schedule = append(schedule, models.Matchup{
-			Players: []models.MatchupPlayer{
-				{MatchPlayerID: dm.sideA[0], Side: models.SideA},
-				{MatchPlayerID: dm.sideA[1], Side: models.SideA},
-				{MatchPlayerID: dm.sideB[0], Side: models.SideB},
-				{MatchPlayerID: dm.sideB[1], Side: models.SideB},
-			},
-		})
+	for _, round := range rrRounds {
+		// Collect real (non-ghost) partnership pairs for this round
+		var realPairs [][2]int
+		for _, pair := range round {
+			if pair[0] == ghostIdx || pair[1] == ghostIdx {
+				continue // this pair's player sits out
+			}
+			realPairs = append(realPairs, pair)
+		}
+		// Group consecutive real pairs into 2v2 matchups
+		for j := 0; j+1 < len(realPairs); j += 2 {
+			schedule = append(schedule, models.Matchup{
+				Players: []models.MatchupPlayer{
+					{MatchPlayerID: players[realPairs[j][0]].ID, Side: models.SideA},
+					{MatchPlayerID: players[realPairs[j][1]].ID, Side: models.SideA},
+					{MatchPlayerID: players[realPairs[j+1][0]].ID, Side: models.SideB},
+					{MatchPlayerID: players[realPairs[j+1][1]].ID, Side: models.SideB},
+				},
+			})
+		}
 	}
 
 	// Redistribute into court-limited rounds with balanced play counts
