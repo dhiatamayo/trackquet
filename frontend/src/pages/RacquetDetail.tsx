@@ -3,6 +3,12 @@ import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { format } from 'date-fns'
 import {
+  Plus, Link2, Gauge, Calendar, Target, Weight, RefreshCw,
+  Hourglass, ClipboardList, AlertTriangle, Zap, CheckCircle2,
+  User, Users, Trophy, Dumbbell, ChevronDown, ChevronUp, X,
+  type LucideIcon,
+} from 'lucide-react'
+import {
   fetchRacquet,
   fetchStringRecords,
   createSession,
@@ -27,7 +33,6 @@ export default function RacquetDetail() {
   const [expandedRecord, setExpandedRecord] = useState<number | null>(null)
   const [selectedSession, setSelectedSession] = useState<Session | null>(null)
 
-  // Compose display name for single or hybrid string setups
   const displayStringName = (name: string, gauge: string, crossName?: string, crossGauge?: string) => {
     if (!name) return null
     const main = gauge && gauge !== 'Unknown' ? `${name} ${gauge}` : name
@@ -107,7 +112,7 @@ export default function RacquetDetail() {
       const updated = await restringRacquet(Number(id), payload)
       setRacquet(updated)
       setShowRestring(false)
-      toast.success('Racquet restrung — counter reset! 🎉')
+      toast.success('Racquet restrung — counter reset!')
       fetchStringRecords(Number(id)).then(setStringRecords).catch(() => {})
     } catch {
       toast.error('Failed to restring')
@@ -115,7 +120,7 @@ export default function RacquetDetail() {
   }
 
   if (loading) {
-    return <div className="text-center py-16 text-gray-400">Loading…</div>
+    return <div className="text-center py-16 text-caption text-ink-400">Loading…</div>
   }
 
   if (!racquet) return null
@@ -123,39 +128,50 @@ export default function RacquetDetail() {
   const sessions: Session[] = racquet.sessions ?? []
   const lifetimeHours = stringRecords.reduce((s, r) => s + r.total_minutes, 0) / 60
 
+  const stringStatus = racquet.needs_restring
+    ? { icon: AlertTriangle, label: 'Restring!', tone: 'red' as const }
+    : racquet.usage_percent >= 85
+    ? { icon: Zap, label: 'Declining', tone: 'amber' as const }
+    : { icon: CheckCircle2, label: 'Good', tone: undefined }
+
   return (
     <div className="space-y-6">
       {/* Header card */}
-      <div className={`card p-6 ${racquet.needs_restring ? 'border-red-300 bg-red-50' : ''}`}>
+      <div className={`card p-6 ${racquet.needs_restring ? 'border-red-200 ring-1 ring-red-100' : ''}`}>
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">{racquet.name}</h1>
-            {racquet.brand && <p className="text-gray-500">{racquet.brand}</p>}
+          <div className="min-w-0">
+            <h1 className="text-h1 text-ink-900">{racquet.name}</h1>
+            {racquet.brand && <p className="text-body text-ink-500">{racquet.brand}</p>}
 
-            <div className="flex flex-wrap gap-2 mt-3 text-xs">
+            <div className="flex flex-wrap gap-1.5 mt-3">
               {racquet.string_name && (
-                <span className="bg-court-50 border border-court-200 text-court-800 px-3 py-1 rounded-full font-medium">
-                  🔗 {displayStringName(racquet.string_name, racquet.gauge, racquet.cross_string_name, racquet.cross_gauge)}
+                <span className="chip-brand">
+                  <Link2 className="h-3.5 w-3.5" />
+                  {displayStringName(racquet.string_name, racquet.gauge, racquet.cross_string_name, racquet.cross_gauge)}
                 </span>
               )}
               {racquet.main_tension > 0 && (
-                <span className="bg-gray-100 border border-gray-200 text-gray-700 px-3 py-1 rounded-full">
-                  ⚡ {racquet.main_tension}/{racquet.cross_tension} lbs M/C
+                <span className="chip tnum">
+                  <Gauge className="h-3.5 w-3.5 text-ink-400" />
+                  {racquet.main_tension}/{racquet.cross_tension} lbs M/C
                 </span>
               )}
               {racquet.year > 0 && (
-                <span className="bg-gray-100 border border-gray-200 text-gray-700 px-3 py-1 rounded-full">
-                  📅 {racquet.year}
+                <span className="chip tnum">
+                  <Calendar className="h-3.5 w-3.5 text-ink-400" />
+                  {racquet.year}
                 </span>
               )}
               {racquet.head_size > 0 && (
-                <span className="bg-gray-100 border border-gray-200 text-gray-700 px-3 py-1 rounded-full">
-                  🎯 {racquet.head_size} in²
+                <span className="chip tnum">
+                  <Target className="h-3.5 w-3.5 text-ink-400" />
+                  {racquet.head_size} in²
                 </span>
               )}
               {racquet.weight > 0 && (
-                <span className="bg-gray-100 border border-gray-200 text-gray-700 px-3 py-1 rounded-full">
-                  ⚖️ {racquet.weight}g
+                <span className="chip tnum">
+                  <Weight className="h-3.5 w-3.5 text-ink-400" />
+                  {racquet.weight}g
                 </span>
               )}
             </div>
@@ -163,30 +179,32 @@ export default function RacquetDetail() {
 
           <div className="flex gap-2 shrink-0">
             <button className="btn-primary" onClick={() => setShowLog(true)}>
-              + Log Session
+              <Plus className="h-4 w-4" />
+              Log Session
             </button>
             <button
-              className={`btn ${racquet.needs_restring ? 'bg-red-600 text-white hover:bg-red-700' : 'btn-secondary'}`}
+              className={racquet.needs_restring ? 'btn-danger' : 'btn-secondary'}
               onClick={() => setShowRestring(true)}
               title="Mark as restrung (resets counter)"
             >
-              🔗 Restring
+              <RefreshCw className="h-4 w-4" />
+              Restring
             </button>
           </div>
         </div>
       </div>
 
       {/* Usage stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        <StatCard emoji="🔗" label="String Hours" value={`${racquet.total_hours.toFixed(1)}h`} tooltip="Hours on the current string setup" />
-        <StatCard emoji="⏳" label="Racquet Total" value={`${lifetimeHours.toFixed(1)}h`} tooltip="Total play time across all string setups" />
-        <StatCard emoji="🎯" label="Threshold" value={`${racquet.threshold_hours}h`} />
-        <StatCard emoji="📋" label="Sessions" value={String(sessions.length)} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        <StatCard icon={Link2} label="String Hours" value={`${racquet.total_hours.toFixed(1)}h`} tooltip="Hours on the current string setup" />
+        <StatCard icon={Hourglass} label="Racquet Total" value={`${lifetimeHours.toFixed(1)}h`} tooltip="Total play time across all string setups" />
+        <StatCard icon={Target} label="Threshold" value={`${racquet.threshold_hours}h`} />
+        <StatCard icon={ClipboardList} label="Sessions" value={String(sessions.length)} />
         <StatCard
-          emoji={racquet.needs_restring ? '⚠️' : racquet.usage_percent >= 85 ? '⚡' : '✅'}
+          icon={stringStatus.icon}
           label="String Status"
-          value={racquet.needs_restring ? 'Restring!' : racquet.usage_percent >= 85 ? 'Declining' : 'Good'}
-          highlight={racquet.needs_restring ? 'red' : racquet.usage_percent >= 85 ? 'amber' : undefined}
+          value={stringStatus.label}
+          highlight={stringStatus.tone}
           tooltip={
             racquet.needs_restring
               ? 'Generally a big drop in performance — time to restring.'
@@ -196,16 +214,10 @@ export default function RacquetDetail() {
           }
         />
         <StatCard
-          emoji="👤"
+          icon={User}
           label="Singles"
           value={racquet.total_matches_singles > 0 ? `${racquet.win_ratio_singles.toFixed(0)}%` : '—'}
-          highlight={
-            racquet.total_matches_singles > 0 && racquet.win_ratio_singles >= 60
-              ? undefined
-              : racquet.total_matches_singles > 0 && racquet.win_ratio_singles < 40
-              ? 'red'
-              : undefined
-          }
+          highlight={racquet.total_matches_singles > 0 && racquet.win_ratio_singles < 40 ? 'red' : undefined}
           tooltip={
             racquet.total_matches_singles > 0
               ? `${racquet.win_matches_singles}W / ${racquet.total_matches_singles - racquet.win_matches_singles}L across ${racquet.total_matches_singles} match${racquet.total_matches_singles !== 1 ? 'es' : ''}`
@@ -213,16 +225,10 @@ export default function RacquetDetail() {
           }
         />
         <StatCard
-          emoji="👥"
+          icon={Users}
           label="Doubles"
           value={racquet.total_matches_doubles > 0 ? `${racquet.win_ratio_doubles.toFixed(0)}%` : '—'}
-          highlight={
-            racquet.total_matches_doubles > 0 && racquet.win_ratio_doubles >= 60
-              ? undefined
-              : racquet.total_matches_doubles > 0 && racquet.win_ratio_doubles < 40
-              ? 'red'
-              : undefined
-          }
+          highlight={racquet.total_matches_doubles > 0 && racquet.win_ratio_doubles < 40 ? 'red' : undefined}
           tooltip={
             racquet.total_matches_doubles > 0
               ? `${racquet.win_matches_doubles}W / ${racquet.total_matches_doubles - racquet.win_matches_doubles}L across ${racquet.total_matches_doubles} match${racquet.total_matches_doubles !== 1 ? 'es' : ''}`
@@ -234,34 +240,35 @@ export default function RacquetDetail() {
       {/* Usage bar */}
       <div className="card p-5">
         <div className="mb-3">
-          <h2 className="font-semibold text-gray-900">String Usage</h2>
-          <p className="text-sm text-gray-500 mt-1">{racquet.restring_suggestion}</p>
+          <h2 className="text-h2 text-ink-900">String Usage</h2>
+          <p className="text-caption text-ink-500 mt-1">{racquet.restring_suggestion}</p>
         </div>
         <UsageBar percent={racquet.usage_percent} needsRestring={racquet.needs_restring} />
-        <p className="text-xs text-gray-400 mt-2">
+        <p className="text-caption text-ink-400 mt-2 tnum">
           {racquet.total_hours.toFixed(1)}h on current strings out of {racquet.threshold_hours}h threshold
           {lifetimeHours > racquet.total_hours && (
-            <span className="ml-2 text-gray-300">· {lifetimeHours.toFixed(1)}h total on this racquet</span>
+            <span className="ml-2 text-ink-300">· {lifetimeHours.toFixed(1)}h total on this racquet</span>
           )}
         </p>
       </div>
 
       {/* Sessions list */}
       <div className="card">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">Session History</h2>
-          <button className="btn-primary text-xs py-1.5 px-3" onClick={() => setShowLog(true)}>
-            + Log
+        <div className="flex items-center justify-between p-5 border-b border-ink-100">
+          <h2 className="text-h2 text-ink-900">Session History</h2>
+          <button className="btn-secondary" onClick={() => setShowLog(true)}>
+            <Plus className="h-4 w-4" />
+            Log
           </button>
         </div>
 
         {sessions.length === 0 ? (
-          <div className="text-center py-10 text-gray-400">
-            <p className="text-3xl mb-2">📋</p>
-            <p>No sessions logged yet.</p>
+          <div className="flex flex-col items-center text-center py-12 text-ink-400">
+            <ClipboardList className="h-8 w-8 mb-2 text-ink-300" />
+            <p className="text-caption">No sessions logged yet.</p>
           </div>
         ) : (
-          <ul className="divide-y divide-gray-50">
+          <ul className="divide-y divide-ink-100">
             {[...sessions]
               .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
               .map((s) => (
@@ -274,10 +281,10 @@ export default function RacquetDetail() {
       {/* String History */}
       {stringRecords.length > 0 && (
         <div className="card">
-          <div className="p-5 border-b border-gray-100">
-            <h2 className="font-semibold text-gray-900">String History</h2>
+          <div className="p-5 border-b border-ink-100">
+            <h2 className="text-h2 text-ink-900">String History</h2>
           </div>
-          <ul className="divide-y divide-gray-100">
+          <ul className="divide-y divide-ink-100">
             {stringRecords.map((rec, i) => {
               const isActive = !rec.ended_at
               const isExpanded = expandedRecord === rec.id
@@ -286,34 +293,36 @@ export default function RacquetDetail() {
               const usagePct = rec.threshold_hours > 0 ? Math.min(100, (recHours / rec.threshold_hours) * 100) : null
               const startDate = (() => { try { return format(new Date(rec.started_at), 'MMM d, yyyy') } catch { return rec.started_at } })()
               const endDate = rec.ended_at ? (() => { try { return format(new Date(rec.ended_at), 'MMM d, yyyy') } catch { return rec.ended_at } })() : null
-              const usageColor = usagePct === null ? 'text-gray-400' : usagePct >= 100 ? 'text-red-600' : usagePct >= 85 ? 'text-amber-600' : 'text-green-600'
+              const usageColor = usagePct === null ? 'text-ink-400' : usagePct >= 100 ? 'text-red-600' : usagePct >= 85 ? 'text-amber-600' : 'text-court-600'
               return (
                 <li key={rec.id}>
                   <button
-                    className="w-full text-left px-5 py-4 hover:bg-gray-50 flex items-center justify-between gap-3"
+                    className="w-full text-left px-5 py-4 hover:bg-ink-50 flex items-center justify-between gap-3 transition-colors"
                     onClick={() => setExpandedRecord(isExpanded ? null : rec.id)}
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        {isActive && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">Active</span>}
-                        {i === 0 && !isActive && <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">Latest</span>}
-                        <span className="font-medium text-sm text-gray-900">{displayStringName(rec.string_name, rec.gauge, rec.cross_string_name, rec.cross_gauge) || 'Unknown String'}</span>
+                        {isActive && <span className="chip-brand py-0.5">Active</span>}
+                        {i === 0 && !isActive && <span className="chip py-0.5">Latest</span>}
+                        <span className="font-medium text-caption text-ink-900">{displayStringName(rec.string_name, rec.gauge, rec.cross_string_name, rec.cross_gauge) || 'Unknown String'}</span>
                         {usagePct !== null && (
-                          <span className={`text-xs font-semibold ${usageColor}`}>
+                          <span className={`text-caption font-semibold tnum ${usageColor}`}>
                             {usagePct.toFixed(0)}% · {totalHours}h/{rec.threshold_hours}h
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-gray-500 mt-1">
-                        {rec.main_tension > 0 && <span>⚡ {rec.main_tension}/{rec.cross_tension} lbs · </span>}
+                      <div className="text-caption text-ink-500 mt-1 tnum">
+                        {rec.main_tension > 0 && <span>{rec.main_tension}/{rec.cross_tension} lbs · </span>}
                         {rec.gauge && <span>gauge {rec.gauge} · </span>}
                         <span>{startDate}{endDate ? ` → ${endDate}` : ' → now'} · {rec.sessions?.length ?? 0} sessions</span>
                       </div>
                     </div>
-                    <span className="text-gray-400 text-xs">{isExpanded ? '▲' : '▼'}</span>
+                    {isExpanded
+                      ? <ChevronUp className="h-4 w-4 text-ink-400 shrink-0" />
+                      : <ChevronDown className="h-4 w-4 text-ink-400 shrink-0" />}
                   </button>
                   {isExpanded && rec.sessions && rec.sessions.length > 0 && (
-                    <ul className="bg-gray-50 divide-y divide-gray-100 border-t border-gray-100">
+                    <ul className="bg-ink-50 divide-y divide-ink-100 border-t border-ink-100">
                       {rec.sessions.map((s) => {
                         const sDate = (() => { try { return format(new Date(s.date), 'MMM d, yyyy') } catch { return s.date } })()
                         const h = Math.floor(s.duration_min / 60), m = s.duration_min % 60
@@ -321,29 +330,31 @@ export default function RacquetDetail() {
                         return (
                           <li
                             key={s.id}
-                            className="flex items-center gap-3 px-8 py-2.5 text-sm hover:bg-gray-100 cursor-pointer transition-colors"
+                            className="flex items-center gap-3 px-8 py-2.5 text-caption hover:bg-ink-100 cursor-pointer transition-colors"
                             onClick={() => setSelectedSession(s)}
                           >
-                            <span>{s.type === 'match' ? '🏆' : '🏋️'}</span>
+                            {s.type === 'match'
+                              ? <Trophy className="h-4 w-4 text-court-500 shrink-0" />
+                              : <Dumbbell className="h-4 w-4 text-ink-400 shrink-0" />}
                             <div className="flex-1 min-w-0">
-                              <span className="text-gray-800 font-medium">{s.name || s.type}</span>
-                              <span className="text-gray-400 text-xs ml-2">{sDate}</span>
+                              <span className="text-ink-800 font-medium">{s.name || s.type}</span>
+                              <span className="text-ink-400 ml-2">{sDate}</span>
                               {s.match_result && (
-                                <span className={`ml-2 text-xs font-semibold ${s.match_result === 'win' ? 'text-green-600' : 'text-red-500'}`}>
-                                  {s.match_result === 'win' ? '🏅 W' : '😤 L'}
+                                <span className={`ml-2 font-semibold ${s.match_result === 'win' ? 'text-court-600' : 'text-red-500'}`}>
+                                  {s.match_result === 'win' ? 'W' : 'L'}
                                   {s.match_score && ` ${s.match_score}`}
                                 </span>
                               )}
-                              {s.notes && <p className="text-xs text-gray-400 truncate">{s.notes}</p>}
+                              {s.notes && <p className="text-ink-400 truncate">{s.notes}</p>}
                             </div>
-                            <span className="text-court-700 font-semibold text-xs shrink-0">{dur}</span>
+                            <span className="text-court-700 font-semibold shrink-0 tnum">{dur}</span>
                           </li>
                         )
                       })}
                     </ul>
                   )}
                   {isExpanded && (!rec.sessions || rec.sessions.length === 0) && (
-                    <p className="text-xs text-gray-400 px-8 py-3 bg-gray-50">No sessions in this period.</p>
+                    <p className="text-caption text-ink-400 px-8 py-3 bg-ink-50">No sessions in this period.</p>
                   )}
                 </li>
               )
@@ -407,54 +418,57 @@ function SessionRow({ session, onDelete, onView }: { session: Session; onDelete:
 
   return (
     <li
-      className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 cursor-pointer transition-colors"
+      className="flex items-center gap-4 px-5 py-3 hover:bg-ink-50 cursor-pointer transition-colors group"
       onClick={() => onView(session)}
     >
-      <span className="text-xl">{session.type === 'match' ? '🏆' : '🏋️'}</span>
+      <span className={`flex h-9 w-9 items-center justify-center rounded-control shrink-0 ${session.type === 'match' ? 'bg-court-50 text-court-600' : 'bg-ink-100 text-ink-500'}`}>
+        {session.type === 'match' ? <Trophy className="h-4 w-4" /> : <Dumbbell className="h-4 w-4" />}
+      </span>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-sm capitalize text-gray-800">{session.name || session.type}</span>
-          <span className="text-xs text-gray-400">·</span>
-          <span className="text-xs text-gray-500 capitalize">{session.type}</span>
+          <span className="font-medium text-caption capitalize text-ink-800">{session.name || session.type}</span>
+          <span className="text-ink-300">·</span>
+          <span className="text-caption text-ink-500 capitalize">{session.type}</span>
           {session.type === 'match' && session.match_type && (
             <>
-              <span className="text-xs text-gray-400">·</span>
-              <span className="text-xs text-indigo-600 font-medium capitalize">{session.match_type}</span>
+              <span className="text-ink-300">·</span>
+              <span className="text-caption text-court-600 font-medium capitalize">{session.match_type}</span>
             </>
           )}
-          <span className="text-xs text-gray-400">·</span>
-          <span className="text-xs text-gray-500">{dateStr}</span>
+          <span className="text-ink-300">·</span>
+          <span className="text-caption text-ink-500">{dateStr}</span>
           {session.match_result && (
-            <span className={`text-xs font-semibold ${session.match_result === 'win' ? 'text-green-600' : 'text-red-500'}`}>
-              {session.match_result === 'win' ? '🏅 W' : '😤 L'}
+            <span className={`text-caption font-semibold ${session.match_result === 'win' ? 'text-court-600' : 'text-red-500'}`}>
+              {session.match_result === 'win' ? 'W' : 'L'}
               {session.match_score && ` · ${session.match_score}`}
             </span>
           )}
         </div>
         {session.notes && (
-          <p className="text-xs text-gray-400 truncate mt-0.5">{session.notes}</p>
+          <p className="text-caption text-ink-400 truncate mt-0.5">{session.notes}</p>
         )}
       </div>
-      <span className="text-sm font-semibold text-court-700 shrink-0">{durationStr}</span>
+      <span className="text-caption font-semibold text-court-700 shrink-0 tnum">{durationStr}</span>
       <button
         onClick={(e) => { e.stopPropagation(); onDelete(session.id) }}
-        className="text-gray-300 hover:text-red-500 transition-colors ml-1 shrink-0"
+        className="text-ink-300 hover:text-red-500 transition-colors ml-1 shrink-0 opacity-0 group-hover:opacity-100"
         title="Delete session"
+        aria-label="Delete session"
       >
-        ✕
+        <X className="h-4 w-4" />
       </button>
     </li>
   )
 }
 
 function StatCard({
-  emoji,
+  icon: Icon,
   label,
   value,
   highlight,
   tooltip,
 }: {
-  emoji: string
+  icon: LucideIcon
   label: string
   value: string
   highlight?: 'red' | 'amber'
@@ -465,20 +479,27 @@ function StatCard({
     : highlight === 'amber'
     ? 'border-amber-200 bg-amber-50'
     : ''
+  const iconTone = highlight === 'red'
+    ? 'bg-red-100 text-red-600'
+    : highlight === 'amber'
+    ? 'bg-amber-100 text-amber-600'
+    : 'bg-ink-100 text-ink-500'
   const textColor = highlight === 'red'
     ? 'text-red-600'
     : highlight === 'amber'
     ? 'text-amber-600'
-    : 'text-gray-900'
+    : 'text-ink-900'
   return (
     <div className={`card p-4 ${bg} ${tooltip ? 'relative group cursor-default' : ''}`}>
-      <div className="text-2xl mb-1">{emoji}</div>
-      <div className={`text-xl font-bold ${textColor}`}>{value}</div>
-      <div className="text-xs text-gray-500">{label}</div>
+      <span className={`flex h-8 w-8 items-center justify-center rounded-control mb-2 ${iconTone}`}>
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className={`text-h2 font-bold tnum ${textColor}`}>{value}</div>
+      <div className="stat-label mt-0.5">{label}</div>
       {tooltip && (
-        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-gray-900 text-white text-xs rounded-lg px-3 py-2 text-center leading-snug opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 bg-ink-900 text-white text-caption rounded-control px-3 py-2 text-center leading-snug opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
           {tooltip}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-900" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-ink-900" />
         </div>
       )}
     </div>

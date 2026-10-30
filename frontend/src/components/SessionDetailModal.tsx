@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
+import { X, Trophy, Dumbbell } from 'lucide-react'
 import type { Session, MatchType } from '../types'
 import { updateSession } from '../api/client'
 
@@ -67,52 +68,51 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
         <div className="card w-full max-w-md p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-5">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-2xl">{isMatch ? '🏆' : '🏋️'}</span>
-                <h2 className="text-lg font-bold text-gray-900">
+            <div className="flex items-start gap-3">
+              <span className={`flex h-10 w-10 items-center justify-center rounded-control shrink-0 ${isMatch ? 'bg-court-50 text-court-600' : 'bg-ink-100 text-ink-500'}`}>
+                {isMatch ? <Trophy className="h-5 w-5" /> : <Dumbbell className="h-5 w-5" />}
+              </span>
+              <div>
+                <h2 className="text-h2 text-ink-900">
                   {session.name || (isMatch ? 'Match' : 'Training')}
                 </h2>
+                <p className="text-caption text-ink-500 mt-0.5">{dateStr}</p>
               </div>
-              <p className="text-sm text-gray-500">{dateStr}</p>
             </div>
-            <button
-              onClick={onClose}
-              className="text-gray-400 hover:text-gray-700 text-xl ml-4 mt-1 shrink-0"
-            >
-              ×
+            <button onClick={onClose} className="btn-icon shrink-0" aria-label="Close">
+              <X className="h-4 w-4" />
             </button>
           </div>
 
           {/* Quick-info chips */}
           <div className="flex flex-wrap gap-2 mb-5">
-            <span className="bg-gray-100 rounded-lg px-3 py-1.5 text-sm">
-              <span className="font-semibold text-gray-800">{durationStr}</span>
-              <span className="text-gray-500 ml-1">duration</span>
+            <span className="bg-ink-100 rounded-control px-3 py-1.5 text-caption">
+              <span className="font-semibold text-ink-800">{durationStr}</span>
+              <span className="text-ink-500 ml-1">duration</span>
             </span>
-            <span className="bg-gray-100 rounded-lg px-3 py-1.5 text-sm capitalize">
-              <span className="font-semibold text-gray-800">{session.type}</span>
+            <span className="bg-ink-100 rounded-control px-3 py-1.5 text-caption capitalize">
+              <span className="font-semibold text-ink-800">{session.type}</span>
             </span>
             {isMatch && session.match_type && (
-              <span className="bg-indigo-100 rounded-lg px-3 py-1.5 text-sm capitalize">
-                <span className="font-semibold text-indigo-700">
-                  {session.match_type === 'singles' ? '👤 Singles' : '👥 Doubles'}
+              <span className="bg-court-50 rounded-control px-3 py-1.5 text-sm capitalize">
+                <span className="font-semibold text-court-700">
+                  {session.match_type === 'singles' ? 'Singles' : 'Doubles'}
                 </span>
               </span>
             )}
             {isMatch && session.match_result && (
               <span
-                className={`rounded-lg px-3 py-1.5 text-sm font-semibold capitalize ${
+                className={`rounded-control px-3 py-1.5 text-caption font-semibold capitalize ${
                   session.match_result === 'win'
-                    ? 'bg-green-100 text-green-700'
+                    ? 'bg-court-50 text-court-700'
                     : 'bg-red-100 text-red-700'
                 }`}
               >
-                {session.match_result === 'win' ? '🏅' : '😤'} {session.match_result}
+                {session.match_result}
               </span>
             )}
             {isMatch && session.match_score && (
-              <span className="bg-gray-100 rounded-lg px-3 py-1.5 text-sm text-gray-700">
+              <span className="bg-ink-100 rounded-control px-3 py-1.5 text-caption text-ink-700">
                 {session.match_score}
               </span>
             )}
@@ -120,15 +120,15 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
 
           {/* Opponent's racquet display (read-only chip) */}
           {isMatch && session.opponent_racquet && !opponentRacquet && (
-            <div className="mb-4 text-sm text-gray-600">
+            <div className="mb-4 text-caption text-ink-600">
               <span className="font-medium">Opponent's racquet:</span> {session.opponent_racquet}
             </div>
           )}
 
           {/* Editable match fields */}
           {isMatch && (
-            <div className="space-y-3 border border-amber-200 bg-amber-50 rounded-xl p-4 mb-4">
-              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Match Details</p>
+            <div className="space-y-3 border border-amber-200 bg-amber-50 rounded-card p-4 mb-4">
+              <p className="text-caption font-semibold text-amber-700 uppercase tracking-wide">Match Details</p>
 
               <div>
                 <label className="label">Match Type</label>
@@ -138,13 +138,13 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
                       key={mt}
                       type="button"
                       onClick={() => setMatchType(mt)}
-                      className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                      className={`flex-1 py-2 rounded-control border text-caption font-medium transition-colors ${
                         matchType === mt
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          ? 'bg-court-600 text-white border-court-600'
+                          : 'bg-white text-ink-700 border-ink-300 hover:bg-ink-50'
                       }`}
                     >
-                      {mt === 'singles' ? '👤 Singles' : '👥 Doubles'}
+                      {mt === 'singles' ? 'Singles' : 'Doubles'}
                     </button>
                   ))}
                 </div>
@@ -158,15 +158,15 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
                       key={r}
                       type="button"
                       onClick={() => setMatchResult(matchResult === r ? '' : r)}
-                      className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                      className={`flex-1 py-2 rounded-control border text-caption font-medium transition-colors ${
                         matchResult === r
                           ? r === 'win'
-                            ? 'bg-green-600 text-white border-green-600'
+                            ? 'bg-court-600 text-white border-court-600'
                             : 'bg-red-600 text-white border-red-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          : 'bg-white text-ink-700 border-ink-300 hover:bg-ink-50'
                       }`}
                     >
-                      {r === 'win' ? '🏅 Win' : '😤 Loss'}
+                      {r === 'win' ? 'Win' : 'Loss'}
                     </button>
                   ))}
                 </div>

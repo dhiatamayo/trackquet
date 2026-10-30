@@ -77,7 +77,7 @@ export default function PlayerInput({ players, onPlayersChange, showGender, show
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <label className="label mb-0">Players</label>
-        <span className="text-xs text-gray-500">{players.length} player{players.length !== 1 ? 's' : ''}</span>
+        <span className="text-caption text-ink-500">{players.length} player{players.length !== 1 ? 's' : ''}</span>
       </div>
 
       <div ref={listRef} className="space-y-2 max-h-64 overflow-y-auto px-0.5 py-0.5">
@@ -137,7 +137,7 @@ export default function PlayerInput({ players, onPlayersChange, showGender, show
               <button
                 type="button"
                 onClick={() => removePlayer(index)}
-                className="shrink-0 p-2 text-gray-400 hover:text-red-500 transition-colors"
+                className="shrink-0 p-2 text-ink-400 hover:text-red-500 transition-colors"
                 title="Remove player"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -153,7 +153,7 @@ export default function PlayerInput({ players, onPlayersChange, showGender, show
       <button
         type="button"
         onClick={addPlayer}
-        className="w-full py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-court-400 hover:text-court-600 transition-colors"
+        className="w-full py-2 border-2 border-dashed border-ink-300 rounded-lg text-caption text-ink-500 hover:border-court-400 hover:text-court-600 transition-colors"
       >
         + Add Player
       </button>

@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
+import { Swords } from 'lucide-react'
 import ScoreInput, { validateScore } from './ScoreInput'
 import { updateMatchup, startMatchup, finishMatchup } from '../api/matches'
 import type { Matchup, MatchPlayer, WinConditionType, MatchType } from '../types'
@@ -202,14 +203,16 @@ export default function MatchupDetailModal({
           <div className="flex items-start justify-between mb-5">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <span className="text-2xl">🎾</span>
-                <h2 className="text-lg font-bold text-gray-900">Matchup Details</h2>
+                <span className="flex h-9 w-9 items-center justify-center rounded-control bg-court-50 text-court-600">
+                  <Swords className="h-5 w-5" />
+                </span>
+                <h2 className="text-h2 text-ink-900">Matchup Details</h2>
               </div>
-              <p className="text-sm text-gray-500">Round {matchup.round}</p>
+              <p className="text-caption text-ink-500">Round {matchup.round}</p>
             </div>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-700 text-xl ml-4 mt-1 shrink-0"
+              className="text-ink-400 hover:text-ink-700 text-xl ml-4 mt-1 shrink-0"
               aria-label="Close matchup detail"
             >
               ×
@@ -218,31 +221,31 @@ export default function MatchupDetailModal({
 
           {/* Quick-info chips */}
           <div className="flex flex-wrap gap-2 mb-5">
-            <span className="bg-gray-100 rounded-lg px-3 py-1.5 text-sm capitalize">
-              <span className="font-semibold text-gray-800">
-                {matchType === 'singles' ? '👤 Singles' : '👥 Doubles'}
+            <span className="bg-ink-100 rounded-control px-3 py-1.5 text-caption capitalize">
+              <span className="font-semibold text-ink-800">
+                {matchType === 'singles' ? 'Singles' : 'Doubles'}
               </span>
             </span>
-            <span className="bg-indigo-100 rounded-lg px-3 py-1.5 text-sm">
-              <span className="font-semibold text-indigo-700">{winConditionLabel}</span>
+            <span className="bg-court-50 rounded-control px-3 py-1.5 text-caption">
+              <span className="font-semibold text-court-700">{winConditionLabel}</span>
             </span>
           </div>
 
           {/* Players */}
-          <div className="border border-gray-200 rounded-xl p-4 mb-4">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Players</p>
+          <div className="border border-ink-200 rounded-xl p-4 mb-4">
+            <p className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-3">Players</p>
             <div className="flex items-center gap-3">
               <div className="flex-1 text-center">
-                <p className="text-xs text-gray-500 mb-1 font-medium">Side A</p>
+                <p className="text-caption text-ink-500 mb-1 font-medium">Side A</p>
                 {sideAPlayers.map((p) => (
-                  <p key={p.id} className="text-sm font-semibold text-gray-800">{p.name}</p>
+                  <p key={p.id} className="text-sm font-semibold text-ink-800">{p.name}</p>
                 ))}
               </div>
-              <span className="text-gray-400 font-bold text-lg">vs</span>
+              <span className="text-ink-400 font-bold text-lg">vs</span>
               <div className="flex-1 text-center">
-                <p className="text-xs text-gray-500 mb-1 font-medium">Side B</p>
+                <p className="text-caption text-ink-500 mb-1 font-medium">Side B</p>
                 {sideBPlayers.map((p) => (
-                  <p key={p.id} className="text-sm font-semibold text-gray-800">{p.name}</p>
+                  <p key={p.id} className="text-sm font-semibold text-ink-800">{p.name}</p>
                 ))}
               </div>
             </div>
@@ -301,7 +304,7 @@ export default function MatchupDetailModal({
                 </button>
               </div>
             ) : (
-              <span className="text-sm text-gray-500">✓ Completed ({finalDuration})</span>
+              <span className="text-caption text-ink-500">Completed ({finalDuration})</span>
             )}
           </div>
 

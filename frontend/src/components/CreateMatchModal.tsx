@@ -198,7 +198,7 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
         <div className="card w-full max-w-lg p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold">Create Match Session</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl">
+            <button onClick={onClose} className="text-ink-400 hover:text-ink-700 text-xl">
               ×
             </button>
           </div>
@@ -270,7 +270,7 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
                   type="button"
                   onClick={() => setFixedPartners(!fixedPartners)}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    fixedPartners ? 'bg-court-600' : 'bg-gray-200'
+                    fixedPartners ? 'bg-court-600' : 'bg-ink-200'
                   }`}
                 >
                   <span
@@ -279,7 +279,7 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
                     }`}
                   />
                 </button>
-                <span className="text-sm font-medium text-gray-700">Fixed Partners</span>
+                <span className="text-caption font-medium text-ink-700">Fixed Partners</span>
               </div>
             )}
 
@@ -308,7 +308,7 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
                 <button
                   type="button"
                   onClick={() => setNumCourts(Math.max(1, numCourts - 1))}
-                  className="w-10 h-10 rounded-lg border border-gray-300 text-lg font-bold text-gray-700 hover:bg-gray-100 flex items-center justify-center"
+                  className="w-10 h-10 rounded-lg border border-ink-300 text-lg font-bold text-ink-700 hover:bg-ink-100 flex items-center justify-center"
                 >
                   −
                 </button>
@@ -316,12 +316,12 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
                 <button
                   type="button"
                   onClick={() => setNumCourts(Math.min(20, numCourts + 1))}
-                  className="w-10 h-10 rounded-lg border border-gray-300 text-lg font-bold text-gray-700 hover:bg-gray-100 flex items-center justify-center"
+                  className="w-10 h-10 rounded-lg border border-ink-300 text-lg font-bold text-ink-700 hover:bg-ink-100 flex items-center justify-center"
                 >
                   +
                 </button>
               </div>
-              <p className="text-xs text-gray-500 mt-1">Courts are auto-assigned to matchups</p>
+              <p className="text-caption text-ink-500 mt-1">Courts are auto-assigned to matchups</p>
             </div>
 
             {/* Win Condition */}
@@ -330,7 +330,7 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
               <div className="space-y-2">
                 {/* Sets options - always available */}
                 <div>
-                  <p className="text-xs text-gray-500 mb-1">Sets</p>
+                  <p className="text-caption text-ink-500 mb-1">Sets</p>
                   <div className="grid grid-cols-2 gap-2">
                     {SETS_OPTIONS.map((opt) => (
                       <button
@@ -343,7 +343,7 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
                         className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
                           winConditionType === 'sets' && winConditionValue === opt.value
                             ? 'bg-court-600 text-white border-court-600'
-                            : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                            : 'bg-white text-ink-700 border-ink-300 hover:bg-ink-50'
                         }`}
                       >
                         {opt.label}
@@ -355,7 +355,7 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
                 {/* Points options - only for Padel */}
                 {sportType === 'padel' && (
                   <div>
-                    <p className="text-xs text-gray-500 mb-1">Points</p>
+                    <p className="text-caption text-ink-500 mb-1">Points</p>
                     <div className="grid grid-cols-3 gap-2">
                       {POINTS_OPTIONS.map((opt) => (
                         <button
@@ -368,7 +368,7 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
                           className={`px-3 py-2 rounded-lg border text-sm font-medium transition-colors ${
                             winConditionType === 'points' && winConditionValue === opt.value
                               ? 'bg-court-600 text-white border-court-600'
-                              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                              : 'bg-white text-ink-700 border-ink-300 hover:bg-ink-50'
                           }`}
                         >
                           {opt.label}

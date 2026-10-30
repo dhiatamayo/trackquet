@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { X } from 'lucide-react'
 import type { SessionType, MatchType, StringRecord } from '../types'
 import { format, parseISO, startOfDay } from 'date-fns'
 
@@ -72,10 +73,10 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
       <div className="flex min-h-full items-center justify-center px-4 py-8">
       <div className="card w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold">Log Session</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl">×</button>
+          <h2 className="text-h2 text-ink-900">Log Session</h2>
+          <button onClick={onClose} className="btn-icon" aria-label="Close"><X className="h-4 w-4" /></button>
         </div>
-        <p className="text-sm text-gray-500 mb-4">Racquet: <strong>{racquetName}</strong></p>
+        <p className="text-body text-ink-500 mb-4">Racquet: <strong>{racquetName}</strong></p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* String configuration */}
@@ -94,28 +95,28 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
                         setSelectedRecordId(r.id)
                         setDate(format(new Date(), 'yyyy-MM-dd'))
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-lg border text-sm transition-colors ${
+                      className={`w-full text-left px-3 py-2 rounded-control border text-caption transition-colors ${
                         isSelected
                           ? isActive
-                            ? 'border-green-500 bg-green-50 text-green-800'
+                            ? 'border-court-500 bg-court-50 text-court-800'
                             : 'border-red-400 bg-red-50 text-red-800'
-                          : 'border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
+                          : 'border-ink-200 bg-white text-ink-700 hover:bg-ink-50'
                       }`}
                     >
                       <div className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${
-                          isActive ? 'bg-green-500' : 'bg-red-400'
+                          isActive ? 'bg-court-500' : 'bg-red-400'
                         }`} />
                         <span className="font-medium">
                           {r.string_name || 'Unknown'}{r.gauge ? ` (${r.gauge})` : ''}
                         </span>
                         <span className={`ml-auto text-xs ${
-                          isActive ? 'text-green-600' : 'text-red-500'
+                          isActive ? 'text-court-600' : 'text-red-500'
                         }`}>
                           {isActive ? 'Active' : 'Retired'}
                         </span>
                       </div>
-                      <div className="text-xs text-gray-400 mt-0.5 pl-4">
+                      <div className="text-caption text-ink-400 mt-0.5 pl-4">
                         {format(new Date(r.started_at), 'MMM d, yyyy')} →{' '}
                         {r.ended_at ? format(new Date(r.ended_at), 'MMM d, yyyy') : 'now'}
                         {' · '}{(r.total_minutes / 60).toFixed(1)}h
@@ -151,7 +152,7 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
               onChange={(e) => setDate(e.target.value)}
               required
             />
-            {dateError && <p className="text-xs text-red-500 mt-1">{dateError}</p>}
+            {dateError && <p className="text-caption text-red-500 mt-1">{dateError}</p>}
           </div>
 
           {/* Duration */}
@@ -166,7 +167,7 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
                 min="0"
                 max="12"
               />
-              <span className="text-sm text-gray-500">h</span>
+              <span className="text-caption text-ink-500">h</span>
               <input
                 type="number"
                 className="input w-20 text-center"
@@ -176,7 +177,7 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
                 max="59"
                 step="5"
               />
-              <span className="text-sm text-gray-500">min</span>
+              <span className="text-caption text-ink-500">min</span>
             </div>
           </div>
 
@@ -189,13 +190,13 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
                   key={t}
                   type="button"
                   onClick={() => setType(t)}
-                  className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                  className={`flex-1 py-2 rounded-control border text-caption font-medium transition-colors ${
                     type === t
                       ? 'bg-court-600 text-white border-court-600'
-                      : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                      : 'bg-white text-ink-700 border-ink-300 hover:bg-ink-50'
                   }`}
                 >
-                  {t === 'training' ? '🏋️ Training' : '🏆 Match'}
+                  {t === 'training' ? 'Training' : 'Match'}
                 </button>
               ))}
             </div>
@@ -215,8 +216,8 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
 
           {/* Match-specific fields */}
           {type === 'match' && (
-            <div className="space-y-3 border border-amber-200 bg-amber-50 rounded-xl p-4">
-              <p className="text-xs font-semibold text-amber-700 uppercase tracking-wide">Match Details</p>
+            <div className="space-y-3 border border-amber-200 bg-amber-50 rounded-card p-4">
+              <p className="text-caption font-semibold text-amber-700 uppercase tracking-wide">Match Details</p>
 
               <div>
                 <label className="label">Match Type</label>
@@ -226,13 +227,13 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
                       key={mt}
                       type="button"
                       onClick={() => setMatchType(mt)}
-                      className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                      className={`flex-1 py-2 rounded-control border text-caption font-medium transition-colors ${
                         matchType === mt
-                          ? 'bg-indigo-600 text-white border-indigo-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          ? 'bg-court-600 text-white border-court-600'
+                          : 'bg-white text-ink-700 border-ink-300 hover:bg-ink-50'
                       }`}
                     >
-                      {mt === 'singles' ? '👤 Singles' : '👥 Doubles'}
+                      {mt === 'singles' ? 'Singles' : 'Doubles'}
                     </button>
                   ))}
                 </div>
@@ -246,15 +247,15 @@ export default function LogSessionModal({ racquetName, stringRecords, onClose, o
                       key={r}
                       type="button"
                       onClick={() => setMatchResult(matchResult === r ? '' : r)}
-                      className={`flex-1 py-2 rounded-lg border text-sm font-medium transition-colors ${
+                      className={`flex-1 py-2 rounded-control border text-caption font-medium transition-colors ${
                         matchResult === r
                           ? r === 'win'
-                            ? 'bg-green-600 text-white border-green-600'
+                            ? 'bg-court-600 text-white border-court-600'
                             : 'bg-red-600 text-white border-red-600'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          : 'bg-white text-ink-700 border-ink-300 hover:bg-ink-50'
                       }`}
                     >
-                      {r === 'win' ? '🏅 Win' : '😤 Loss'}
+                      {r === 'win' ? 'Win' : 'Loss'}
                     </button>
                   ))}
                 </div>

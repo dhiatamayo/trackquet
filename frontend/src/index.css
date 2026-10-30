@@ -1,33 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   body {
-    @apply bg-gray-50 text-gray-900 antialiased;
+    @apply bg-ink-50 text-ink-900 antialiased;
+  }
+  /* tabular figures everywhere numbers matter */
+  .tnum {
+    font-variant-numeric: tabular-nums;
   }
 }
 
 @layer components {
+  /* ── Buttons ── one family, consistent radius/padding ── */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply inline-flex items-center justify-center gap-2 rounded-control px-4 py-2 text-caption font-semibold transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
   }
   .btn-primary {
-    @apply btn bg-court-600 text-white hover:bg-court-700 focus:ring-court-500;
+    @apply btn bg-court-600 text-white hover:bg-court-700 active:bg-court-800 focus-visible:ring-court-500 shadow-sm;
   }
   .btn-secondary {
-    @apply btn bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 focus:ring-court-500;
+    @apply btn bg-white text-ink-700 border border-ink-200 hover:bg-ink-50 hover:border-ink-300 focus-visible:ring-court-500;
+  }
+  .btn-ghost {
+    @apply btn bg-transparent text-ink-600 hover:bg-ink-100 hover:text-ink-900 focus-visible:ring-ink-300;
   }
   .btn-danger {
-    @apply btn bg-red-600 text-white hover:bg-red-700 focus:ring-red-500;
+    @apply btn bg-red-600 text-white hover:bg-red-700 active:bg-red-800 focus-visible:ring-red-500 shadow-sm;
   }
+  .btn-icon {
+    @apply inline-flex items-center justify-center rounded-control h-9 w-9 text-ink-500 hover:bg-ink-100 hover:text-ink-900 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ink-300;
+  }
+
+  /* ── Surfaces ── card has a real border, not shadow-only ── */
   .card {
-    @apply bg-white rounded-xl shadow-sm border border-gray-100;
+    @apply bg-white rounded-card border border-ink-200 shadow-card;
   }
+  .card-interactive {
+    @apply card transition-all hover:shadow-lift hover:border-ink-300;
+  }
+
+  /* ── Form controls ── */
   .input {
-    @apply w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-court-500 focus:border-transparent;
+    @apply w-full rounded-control border border-ink-300 bg-white px-3 py-2 text-body text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-court-500 focus:border-court-500 transition-shadow;
   }
   .label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-caption font-medium text-ink-700 mb-1.5;
+  }
+  .select {
+    @apply rounded-control border border-ink-300 bg-white px-3 py-2 text-caption text-ink-900 focus:outline-none focus:ring-2 focus:ring-court-500 focus:border-court-500 transition-shadow;
+  }
+
+  /* ── Chips / badges ── */
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-control border border-ink-200 bg-ink-50 px-2.5 py-1 text-caption font-medium text-ink-700;
+  }
+  .chip-brand {
+    @apply inline-flex items-center gap-1.5 rounded-control border border-court-200 bg-court-50 px-2.5 py-1 text-caption font-medium text-court-800;
+  }
+  .badge-alert {
+    @apply inline-flex items-center gap-1 rounded-control bg-red-100 px-2 py-0.5 text-caption font-semibold text-red-700;
+  }
+
+  /* ── Stat figure ── */
+  .stat-value {
+    @apply text-h1 font-bold text-ink-900 tnum;
+  }
+  .stat-label {
+    @apply text-caption text-ink-500;
   }
 }
