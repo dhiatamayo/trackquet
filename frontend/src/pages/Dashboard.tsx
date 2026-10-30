@@ -134,7 +134,7 @@ export default function Dashboard() {
             highlight={needRestringCount > 0}
           />
           <StatCard label="Total Hours" value={`${totalHours.toFixed(1)}h`} icon={Clock} />
-          <StatCard label="Most Used" value={mostUsed} icon={Trophy} />
+          <StatCard label="Most Used" value={mostUsed} icon={Trophy} compact />
         </div>
       )}
 
@@ -228,11 +228,13 @@ function StatCard({
   value,
   icon: Icon,
   highlight,
+  compact,
 }: {
   label: string
   value: string
   icon: React.ComponentType<{ className?: string }>
   highlight?: boolean
+  compact?: boolean
 }) {
   return (
     <div className={`card p-4 ${highlight ? 'border-red-200 bg-red-50' : ''}`}>
@@ -243,7 +245,16 @@ function StatCard({
       >
         <Icon className="h-4 w-4" />
       </span>
-      <div className={`stat-value truncate ${highlight ? 'text-red-600' : ''}`}>{value}</div>
+      {compact ? (
+        <div
+          className={`flex items-center text-body font-bold leading-tight line-clamp-2 min-h-[2.25rem] ${highlight ? 'text-red-600' : 'text-ink-900'}`}
+          title={value}
+        >
+          {value}
+        </div>
+      ) : (
+        <div className={`flex items-center stat-value truncate min-h-[2.25rem] ${highlight ? 'text-red-600' : ''}`}>{value}</div>
+      )}
       <div className="stat-label mt-0.5">{label}</div>
     </div>
   )
