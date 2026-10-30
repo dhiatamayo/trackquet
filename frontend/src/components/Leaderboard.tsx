@@ -1,6 +1,11 @@
-import { useCallback } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import toast from 'react-hot-toast'
+import { Share2, ImageDown, Loader2 } from 'lucide-react'
 import type { LeaderboardEntry } from '../types'
+import {
+  StoryFrame, StorySectionLabel, StoryThemeToggle,
+  captureStory, PALETTES, type StoryTheme,
+} from './StoryExport'
 
 interface Props {
   entries: LeaderboardEntry[]
@@ -10,228 +15,185 @@ interface Props {
 
 export default function Leaderboard({ entries, loading, sessionName }: Props) {
   const shareSupported = typeof navigator !== 'undefined' && !!navigator.share
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [theme, setTheme] = useState<StoryTheme>('light')
+  const [showExport, setShowExport] = useState(false)
+  const [exporting, setExporting] = useState(false)
 
   const generateShareText = useCallback(() => {
     if (entries.length === 0) return ''
-    const title = sessionName ? `🏆 ${sessionName} — Leaderboard` : '🏆 Match Leaderboard'
+    const title = sessionName ? `${sessionName} — Leaderboard` : 'Match Leaderboard'
     const lines = entries.map(
-      (e) => `${rankBadge(e.rank)} ${e.player_name}: ${e.total_points} pts (${formatDiff(e.point_diff)}) — ${e.games_played} games`
+      (e, i) => `${i + 1}. ${e.player_name}: ${e.total_points} pts (${formatDiff(e.point_diff)}) — ${e.games_played} games`
     )
-    return `${title}\n\n${lines.join('\n')}\n\n📊 Tracked with Trackquet`
+    return `${title}\n\n${lines.join('\n')}\n\nTracked with Trackquet`
   }, [entries, sessionName])
 
-  const handlePDF = () => {
-    // Generate a 1080x1920 (9:16) Instagram Story image using canvas
-    const canvas = document.createElement('canvas')
-    canvas.width = 1080
-    canvas.height = 1920
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-
-    // Background gradient
-    const grad = ctx.createLinearGradient(0, 0, 0, 1920)
-    grad.addColorStop(0, '#065f46')
-    grad.addColorStop(1, '#064e3b')
-    ctx.fillStyle = grad
-    ctx.fillRect(0, 0, 1080, 1920)
-
-    // Title
-    ctx.fillStyle = '#ffffff'
-    ctx.font = 'bold 56px -apple-system, BlinkMacSystemFont, sans-serif'
-    ctx.textAlign = 'center'
-    ctx.fillText('🏆 ' + (sessionName || 'Leaderboard'), 540, 160)
-
-    // Subtitle
-    ctx.font = '32px -apple-system, BlinkMacSystemFont, sans-serif'
-    ctx.fillStyle = '#a7f3d0'
-    ctx.fillText(new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }), 540, 220)
-
-    // Table header
-    const startY = 310
-    const rowH = 72
-    const colX = { rank: 100, name: 200, pts: 620, diff: 780, gp: 940 }
-
-    ctx.fillStyle = '#d1fae5'
-    ctx.font = 'bold 28px -apple-system, BlinkMacSystemFont, sans-serif'
-    ctx.textAlign = 'left'
-    ctx.fillText('#', colX.rank, startY)
-    ctx.fillText('Player', colX.name, startY)
-    ctx.textAlign = 'right'
-    ctx.fillText('Pts', colX.pts, startY)
-    ctx.fillText('+/−', colX.diff, startY)
-    ctx.fillText('GP', colX.gp, startY)
-
-    // Divider line
-    ctx.strokeStyle = 'rgba(255,255,255,0.2)'
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.moveTo(80, startY + 20)
-    ctx.lineTo(1000, startY + 20)
-    ctx.stroke()
-
-    // Rows
-    const maxRows = entries.length
-    const availableHeight = 1920 - startY - 160 // leave room for footer
-    const dynamicRowH = Math.min(rowH, Math.floor(availableHeight / maxRows))
-    for (let i = 0; i < maxRows; i++) {
-      const e = entries[i]
-      const y = startY + 60 + i * dynamicRowH
-
-      // Highlight top 3
-      if (e.rank <= 3) {
-        ctx.fillStyle = 'rgba(255,255,255,0.06)'
-        ctx.fillRect(80, y - 40, 920, dynamicRowH - 4)
+  const handleExportImage = async () => {
+    setExporting(true)
+    try {
+      // ensure the hidden card is mounted before capture
+      if (!showExport) {
+        setShowExport(true)
+        await new Promise((r) => setTimeout(r, 60))
       }
-
-      ctx.textAlign = 'left'
-      ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, sans-serif'
-      ctx.fillStyle = '#ffffff'
-      const badge = e.rank === 1 ? '🥇' : e.rank === 2 ? '🥈' : e.rank === 3 ? '🥉' : `${e.rank}`
-      ctx.fillText(badge, colX.rank, y)
-
-      ctx.font = '32px -apple-system, BlinkMacSystemFont, sans-serif'
-      ctx.fillStyle = '#ffffff'
-      ctx.fillText(e.player_name, colX.name, y)
-
-      ctx.textAlign = 'right'
-      ctx.font = 'bold 32px -apple-system, BlinkMacSystemFont, sans-serif'
-      ctx.fillText(`${e.total_points}`, colX.pts, y)
-
-      ctx.fillStyle = e.point_diff > 0 ? '#4ade80' : e.point_diff < 0 ? '#f87171' : '#9ca3af'
-      ctx.font = '30px -apple-system, BlinkMacSystemFont, sans-serif'
-      ctx.fillText(formatDiff(e.point_diff), colX.diff, y)
-
-      ctx.fillStyle = '#9ca3af'
-      ctx.fillText(`${e.games_played}`, colX.gp, y)
-    }
-
-    // Footer
-    ctx.textAlign = 'center'
-    ctx.fillStyle = '#6ee7b7'
-    ctx.font = '26px -apple-system, BlinkMacSystemFont, sans-serif'
-    ctx.fillText('📊 Tracked with Trackquet', 540, 1840)
-
-    // Export as PNG and trigger download/share
-    canvas.toBlob((blob) => {
-      if (!blob) return
-      const file = new File([blob], 'leaderboard.png', { type: 'image/png' })
-
-      // Try native share with file (mobile)
+      const blob = await captureStory(cardRef.current)
+      const file = new File([blob], `leaderboard-${(sessionName || 'match').replace(/\s+/g, '-').toLowerCase()}.png`, { type: 'image/png' })
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        navigator.share({
-          files: [file],
-          title: sessionName || 'Leaderboard',
-          text: '🏆 Match Leaderboard',
-        }).catch(() => {
-          downloadBlob(blob)
-        })
+        await navigator.share({ files: [file], title: sessionName || 'Leaderboard', text: 'Match Leaderboard' })
       } else {
-        downloadBlob(blob)
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = file.name
+        a.click()
+        URL.revokeObjectURL(url)
+        toast.success('Image saved!')
       }
-    }, 'image/png')
+    } catch (err) {
+      if (err instanceof Error && err.name !== 'AbortError') toast.error('Export failed')
+    } finally {
+      setExporting(false)
+    }
   }
 
-  const downloadBlob = (blob: Blob) => {
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `leaderboard-${(sessionName || 'match').replace(/\s+/g, '-').toLowerCase()}.png`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    toast.success('Image saved!')
+  const handleShareText = async () => {
+    const text = generateShareText()
+    if (!text) return
+    if (shareSupported) {
+      try { await navigator.share({ title: 'Leaderboard', text }) }
+      catch (err) {
+        if (err instanceof Error && err.name !== 'AbortError') {
+          await navigator.clipboard.writeText(text)
+          toast.success('Copied to clipboard')
+        }
+      }
+    } else {
+      await navigator.clipboard.writeText(text)
+      toast.success('Copied to clipboard')
+    }
   }
 
   if (loading) {
-    return <div className="text-center py-8 text-gray-500">Loading standings...</div>
+    return <div className="text-center py-8 text-caption text-ink-400">Loading standings…</div>
   }
 
   if (entries.length === 0) {
-    return <div className="text-center py-8 text-gray-500">No standings yet</div>
+    return <div className="text-center py-8 text-caption text-ink-400">No standings yet</div>
   }
 
   return (
     <div>
+      {/* In-app table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full text-caption">
           <thead>
-            <tr className="border-b border-gray-200 text-left text-gray-600">
-              <th className="py-2 px-2 w-10">#</th>
-              <th className="py-2 px-2">Player</th>
-              <th className="py-2 px-2 text-right">Pts</th>
-              <th className="py-2 px-2 text-right">+/−</th>
-              <th className="py-2 px-2 text-right">GP</th>
+            <tr className="border-b border-ink-200 text-left text-ink-500">
+              <th className="py-2 px-2 w-10 font-medium">#</th>
+              <th className="py-2 px-2 font-medium">Player</th>
+              <th className="py-2 px-2 text-right font-medium">Pts</th>
+              <th className="py-2 px-2 text-right font-medium">+/−</th>
+              <th className="py-2 px-2 text-right font-medium">GP</th>
             </tr>
           </thead>
           <tbody>
             {entries.map((entry) => (
-              <tr
-                key={entry.player_id}
-                className={`border-b border-gray-100 ${rankStyle(entry.rank)}`}
-              >
-                <td className="py-2 px-2 text-center">{rankBadge(entry.rank)}</td>
-                <td className="py-2 px-2 text-gray-900">{entry.player_name}</td>
-                <td className="py-2 px-2 text-right font-medium">{entry.total_points}</td>
-                <td className={`py-2 px-2 text-right ${entry.point_diff > 0 ? 'text-green-600' : entry.point_diff < 0 ? 'text-red-600' : 'text-gray-500'}`}>
+              <tr key={entry.player_id} className={`border-b border-ink-100 ${entry.rank <= 3 ? 'bg-ink-50/60' : ''}`}>
+                <td className="py-2.5 px-2"><RankBadge rank={entry.rank} /></td>
+                <td className="py-2.5 px-2 text-ink-900 font-medium">{entry.player_name}</td>
+                <td className="py-2.5 px-2 text-right font-semibold text-ink-900 tnum">{entry.total_points}</td>
+                <td className={`py-2.5 px-2 text-right tnum ${entry.point_diff > 0 ? 'text-court-600' : entry.point_diff < 0 ? 'text-red-600' : 'text-ink-400'}`}>
                   {formatDiff(entry.point_diff)}
                 </td>
-                <td className="py-2 px-2 text-right text-gray-500">{entry.games_played}</td>
+                <td className="py-2.5 px-2 text-right text-ink-500 tnum">{entry.games_played}</td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
 
-      {/* Share / PDF buttons */}
-      <div className="mt-4 flex gap-2">
-        <button
-          onClick={async () => {
-            const text = generateShareText()
-            if (!text) return
-            if (shareSupported) {
-              try { await navigator.share({ title: 'Leaderboard', text }) }
-              catch (err) {
-                if (err instanceof Error && err.name !== 'AbortError') {
-                  await navigator.clipboard.writeText(text)
-                  toast.success('Copied to clipboard')
-                }
-              }
-            } else {
-              await navigator.clipboard.writeText(text)
-              toast.success('Copied to clipboard')
-            }
-          }}
-          className="flex-1 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
-        >
-          📤 Share
+      {/* Actions */}
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <button onClick={handleShareText} className="btn-secondary flex-1 min-w-[120px]">
+          <Share2 className="h-4 w-4" />
+          Copy Text
         </button>
-        <button
-          onClick={handlePDF}
-          className="flex-1 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors"
-        >
-          📄 Story Image
+        <button onClick={() => setShowExport((v) => !v)} className="btn-secondary flex-1 min-w-[120px]">
+          <ImageDown className="h-4 w-4" />
+          {showExport ? 'Hide Card' : 'Story Image'}
         </button>
       </div>
+
+      {/* Export panel */}
+      {showExport && (
+        <div className="mt-4 flex flex-col items-center gap-3">
+          <StoryThemeToggle theme={theme} onChange={setTheme} />
+          <StoryFrame cardRef={cardRef} theme={theme} eyebrow="Leaderboard" title={sessionName || 'Standings'}>
+            <LeaderboardBody entries={entries} theme={theme} />
+          </StoryFrame>
+          <button onClick={handleExportImage} disabled={exporting} className="btn-primary w-full max-w-[360px]">
+            {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImageDown className="h-4 w-4" />}
+            {shareSupported ? 'Share / Save' : 'Save PNG'}
+          </button>
+          <p className="text-caption text-ink-400">Exported at 1080×1920 (Instagram Story)</p>
+        </div>
+      )}
     </div>
   )
+}
+
+// ─── Story body (plugs into shared StoryFrame) ───────────────────────────────
+
+function LeaderboardBody({ entries, theme }: { entries: LeaderboardEntry[]; theme: StoryTheme }) {
+  const p = PALETTES[theme]
+  const top = entries.slice(0, 10)
+  return (
+    <>
+      <StorySectionLabel theme={theme}>
+        {new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+      </StorySectionLabel>
+      <div style={{ flex: 1, minHeight: 0 }}>
+        {/* header row */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 6px 6px', fontSize: 9, fontWeight: 700, color: p.textMuted, textTransform: 'uppercase', letterSpacing: '0.06em', borderBottom: `1px solid ${p.divider}` }}>
+          <span style={{ width: 24 }}>#</span>
+          <span style={{ flex: 1 }}>Player</span>
+          <span style={{ width: 44, textAlign: 'right' }}>Pts</span>
+          <span style={{ width: 40, textAlign: 'right' }}>+/−</span>
+          <span style={{ width: 28, textAlign: 'right' }}>GP</span>
+        </div>
+        {top.map((e) => {
+          const medal =
+            e.rank === 1 ? { bg: p.brand, fg: '#fff' } :
+            e.rank === 2 ? { bg: p.panel, fg: p.textMuted } :
+            e.rank === 3 ? { bg: p.brandSoft, fg: p.brand } :
+            null
+          return (
+            <div key={e.player_id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 6px', borderBottom: `1px solid ${p.divider}` }}>
+              <span style={{ width: 24 }}>
+                <span style={{ display: 'inline-flex', width: 20, height: 20, alignItems: 'center', justifyContent: 'center', borderRadius: '50%', fontSize: 10, fontWeight: 800, fontVariantNumeric: 'tabular-nums', background: medal ? medal.bg : 'transparent', color: medal ? medal.fg : p.textMuted, border: medal ? 'none' : `1px solid ${p.panelBorder}` }}>
+                  {e.rank}
+                </span>
+              </span>
+              <span style={{ flex: 1, fontSize: 12, fontWeight: 600, color: p.text, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.player_name}</span>
+              <span style={{ width: 44, textAlign: 'right', fontSize: 12, fontWeight: 700, color: p.text, fontVariantNumeric: 'tabular-nums' }}>{e.total_points}</span>
+              <span style={{ width: 40, textAlign: 'right', fontSize: 11, color: e.point_diff > 0 ? p.pos : e.point_diff < 0 ? p.neg : p.textFaint, fontVariantNumeric: 'tabular-nums' }}>{formatDiff(e.point_diff)}</span>
+              <span style={{ width: 28, textAlign: 'right', fontSize: 11, color: p.textMuted, fontVariantNumeric: 'tabular-nums' }}>{e.games_played}</span>
+            </div>
+          )
+        })}
+      </div>
+    </>
+  )
+}
+
+function RankBadge({ rank }: { rank: number }) {
+  if (rank === 1) return <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-ace-100 text-ace-600 text-caption font-bold tnum ring-1 ring-ace-200">1</span>
+  if (rank === 2) return <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-ink-100 text-ink-600 text-caption font-bold tnum ring-1 ring-ink-200">2</span>
+  if (rank === 3) return <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-orange-100 text-orange-600 text-caption font-bold tnum ring-1 ring-orange-200">3</span>
+  return <span className="inline-flex h-6 w-6 items-center justify-center text-ink-500 text-caption font-semibold tnum">{rank}</span>
 }
 
 function formatDiff(diff: number): string {
   if (diff > 0) return `+${diff}`
   return `${diff}`
-}
-
-function rankStyle(rank: number): string {
-  if (rank === 1) return 'bg-yellow-50 font-semibold'
-  if (rank === 2) return 'bg-gray-50 font-semibold'
-  if (rank === 3) return 'bg-orange-50 font-semibold'
-  return ''
-}
-
-function rankBadge(rank: number): string {
-  if (rank === 1) return '🥇'
-  if (rank === 2) return '🥈'
-  if (rank === 3) return '🥉'
-  return `${rank}`
 }

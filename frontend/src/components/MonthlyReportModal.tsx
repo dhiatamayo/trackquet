@@ -1,26 +1,15 @@
-import { useState, useRef, useCallback } from 'react'
-import type React from 'react'
-import { toPng } from 'html-to-image'
+import { useState, useRef } from 'react'
+import { Download, Share2, Loader2, X, Trophy, Target, Dumbbell } from 'lucide-react'
 import type { MonthlyReport, NotableSession } from '../types'
+import {
+  StoryFrame, StoryStat, StorySectionLabel, StoryThemeToggle,
+  captureStory, PALETTES, type StoryTheme,
+} from './StoryExport'
 
 interface Props {
   report: MonthlyReport
   onClose: () => void
 }
-
-type Theme = 'aurora' | 'neon' | 'clay' | 'frost'
-
-const THEMES: { id: Theme; label: string; emoji: string }[] = [
-  { id: 'aurora', label: 'Aurora', emoji: '🌌' },
-  { id: 'neon',   label: 'Neon',   emoji: '⚡' },
-  { id: 'clay',   label: 'Clay',   emoji: '🏆' },
-  { id: 'frost',  label: 'Frost',  emoji: '❄️' },
-]
-
-// ─── font constant ───────────────────────────────────────────────────────────
-const FONT_SANS = "'Plus Jakarta Sans', 'Inter', 'Segoe UI', system-ui, sans-serif"
-
-// ─── shared helpers ──────────────────────────────────────────────────────────
 
 function fmtMin(min: number): string {
   const h = Math.floor(min / 60)
@@ -30,217 +19,53 @@ function fmtMin(min: number): string {
   return `${h}h ${m}m`
 }
 
-function notableIcon(tag: string) {
-  if (tag.toLowerCase().includes('win')) return '🏆'
-  if (tag.toLowerCase().includes('loss')) return '😤'
-  if (tag.toLowerCase().includes('training')) return '🎯'
-  return '⏱️'
+function notableTone(tag: string, p: ReturnType<() => typeof PALETTES.light>) {
+  const t = tag.toLowerCase()
+  if (t.includes('win')) return p.pos
+  if (t.includes('loss')) return p.neg
+  return p.warn
 }
 
-// ─── Card prop types ─────────────────────────────────────────────────────────
+// ─── Body: the monthly content that plugs into StoryFrame ────────────────────
 
-interface CardProps {
-  report: MonthlyReport
-  cardRef: React.Ref<HTMLDivElement>
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// AURORA — dark indigo / purple (original)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function auroraResultBadge(tag: string) {
-  if (tag.toLowerCase().includes('win'))  return { bg: '#22c55e', text: '#ffffff' }
-  if (tag.toLowerCase().includes('loss')) return { bg: '#ef4444', text: '#ffffff' }
-  return { bg: '#f59e0b', text: '#ffffff' }
-}
-
-function AuroraNotableRow({ s }: { s: NotableSession }) {
-  const { bg, text } = auroraResultBadge(s.notable_tag)
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(255,255,255,0.06)', borderRadius: 8, padding: '7px 10px', marginBottom: 5 }}>
-      <span style={{ fontSize: 15 }}>{notableIcon(s.notable_tag)}</span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.25, color: '#f1f5f9', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {s.name || s.racquet_name}
-        </div>
-        <div style={{ fontSize: 10, lineHeight: 1.2, color: '#94a3b8' }}>
-          {s.date} · {fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}
-        </div>
-      </div>
-      <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1.2, background: bg, color: text, borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-        {s.notable_tag}
-      </span>
-    </div>
-  )
-}
-
-function AuroraCard({ report, cardRef }: CardProps) {
+function MonthlyBody({ report, theme }: { report: MonthlyReport; theme: StoryTheme }) {
+  const p = PALETTES[theme]
   const totalHours = (report.total_minutes / 60).toFixed(1)
-  const usageTop5 = report.racquet_usage.slice(0, 5)
+  const usageTop = report.racquet_usage.slice(0, 3)
+
   return (
-    <div
-      ref={cardRef}
-      style={{
-        width: 360, height: 640,
-        background: 'linear-gradient(160deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
-        borderRadius: 16, overflow: 'hidden',
-        fontFamily: FONT_SANS,
-        color: '#f1f5f9', padding: '24px 20px 18px',
-        display: 'flex', flexDirection: 'column', boxSizing: 'border-box', position: 'relative',
-      }}
-    >
-      <div style={{ position: 'absolute', top: -60, right: -60, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(99,102,241,0.35) 0%, transparent 70%)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: 80, left: -80, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(16,185,129,0.25) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-      <div style={{ marginBottom: 18 }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: '#818cf8', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 2 }}>Monthly Wrap-Up</div>
-        <div style={{ fontSize: 22, fontWeight: 800, lineHeight: 1.1, color: '#ffffff' }}>{report.month}</div>
+    <>
+      {/* Primary stats */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 8 }}>
+        <StoryStat label="Sessions" value={String(report.total_sessions)} theme={theme} accent />
+        <StoryStat label="Hours" value={totalHours} theme={theme} accent />
+        <StoryStat label="Avg/Session" value={`${report.avg_min_per_session}m`} theme={theme} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 16 }}>
-        {[
-          { label: 'Sessions', value: String(report.total_sessions), emoji: '🎾' },
-          { label: 'Hours', value: totalHours, emoji: '⏱️' },
-          { label: 'Avg/Session', value: `${report.avg_min_per_session}m`, emoji: '📊' },
-        ].map((stat) => (
-          <div key={stat.label} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 6px', textAlign: 'center' }}>
-            <div style={{ fontSize: 16 }}>{stat.emoji}</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#ffffff', lineHeight: 1.1 }}>{stat.value}</div>
-            <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 1 }}>{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
+      {/* Win rates */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 16 }}>
-        {[
-          { label: 'Singles', value: report.total_matches_singles > 0 ? `${report.win_rate_singles}%` : '—', emoji: '👤' },
-          { label: 'Doubles', value: report.total_matches_doubles > 0 ? `${report.win_rate_doubles}%` : '—', emoji: '👥' },
-        ].map((stat) => (
-          <div key={stat.label} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 10, padding: '10px 6px', textAlign: 'center' }}>
-            <div style={{ fontSize: 16 }}>{stat.emoji}</div>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#ffffff', lineHeight: 1.1 }}>{stat.value}</div>
-            <div style={{ fontSize: 9, color: '#94a3b8', marginTop: 1 }}>{stat.label}</div>
-          </div>
-        ))}
+        <StoryStat label="Singles Win" value={report.total_matches_singles > 0 ? `${report.win_rate_singles}%` : '—'} theme={theme} />
+        <StoryStat label="Doubles Win" value={report.total_matches_doubles > 0 ? `${report.win_rate_doubles}%` : '—'} theme={theme} />
       </div>
 
-      <div style={{ marginBottom: 14 }}>
-        <div style={{ fontSize: 10, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 7 }}>Racquet Usage</div>
-        {usageTop5.length === 0 ? (
-          <div style={{ fontSize: 11, color: '#64748b' }}>No sessions this month</div>
-        ) : usageTop5.map((rq, i) => {
-          const pct = usageTop5[0].sessions > 0 ? (rq.sessions / usageTop5[0].sessions) * 100 : 0
+      {/* Racquet usage */}
+      <div style={{ marginBottom: 16 }}>
+        <StorySectionLabel theme={theme}>Racquet Usage</StorySectionLabel>
+        {usageTop.length === 0 ? (
+          <div style={{ fontSize: 11, color: p.textFaint }}>No sessions this month</div>
+        ) : usageTop.map((rq, i) => {
+          const pct = usageTop[0].sessions > 0 ? (rq.sessions / usageTop[0].sessions) * 100 : 0
           return (
-            <div key={rq.racquet_id} style={{ marginBottom: 7 }}>
+            <div key={rq.racquet_id} style={{ marginBottom: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 3 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  <span style={{ fontSize: 9, fontWeight: 700, background: i === 0 ? '#f59e0b' : 'rgba(255,255,255,0.15)', color: i === 0 ? '#000' : '#94a3b8', borderRadius: 4, padding: '1px 5px' }}>#{i + 1}</span>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#e2e8f0', maxWidth: 130, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rq.racquet_name}</span>
-                </div>
-                <span style={{ fontSize: 10, color: '#94a3b8' }}>{rq.sessions} session{rq.sessions !== 1 ? 's' : ''} · {fmtMin(rq.total_min)}</span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
+                  <span style={{ fontSize: 9, fontWeight: 700, background: i === 0 ? p.brand : p.panel, color: i === 0 ? '#fff' : p.textMuted, borderRadius: 4, padding: '1px 5px', border: i === 0 ? 'none' : `1px solid ${p.panelBorder}` }}>#{i + 1}</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: p.text, maxWidth: 170, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{rq.racquet_name}</span>
+                </span>
+                <span style={{ fontSize: 10, color: p.textMuted, fontVariantNumeric: 'tabular-nums' }}>{rq.sessions}s · {fmtMin(rq.total_min)}</span>
               </div>
-              <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? 'linear-gradient(90deg, #818cf8, #a78bfa)' : 'rgba(129,140,248,0.5)', borderRadius: 2 }} />
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {report.notable_results.length > 0 && (
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 7 }}>Milestones</div>
-          {report.notable_results.slice(0, 4).map((s) => <AuroraNotableRow key={`${s.session_id}-${s.notable_tag}`} s={s} />)}
-        </div>
-      )}
-
-      <div style={{ marginTop: 'auto', paddingTop: 12, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 14 }}>🎾</span>
-          <span style={{ fontSize: 13, fontWeight: 800, background: 'linear-gradient(90deg, #818cf8, #34d399)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>trackquet</span>
-        </div>
-        <span style={{ fontSize: 9, color: '#475569', letterSpacing: '0.05em' }}>TRACK YOUR GAME</span>
-      </div>
-    </div>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// NEON — cyberpunk black / magenta / cyan
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function NeonCard({ report, cardRef }: CardProps) {
-  const totalHours = (report.total_minutes / 60).toFixed(1)
-  const usageTop5 = report.racquet_usage.slice(0, 5)
-  return (
-    <div
-      ref={cardRef}
-      style={{
-        width: 360, height: 640,
-        background: '#080808',
-        borderRadius: 16, overflow: 'hidden',
-        fontFamily: FONT_SANS,
-        color: '#ffffff', padding: '26px 20px 18px',
-        display: 'flex', flexDirection: 'column', boxSizing: 'border-box', position: 'relative',
-      }}
-    >
-      {/* Top neon bar */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: 'linear-gradient(90deg, #ff0080, #00ffdd, #ff0080)' }} />
-      {/* Bottom neon bar */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 2, background: 'linear-gradient(90deg, transparent, #ff0080, #00ffdd, transparent)' }} />
-      {/* Glow blob */}
-      <div style={{ position: 'absolute', top: -40, right: -40, width: 160, height: 160, borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,255,221,0.12) 0%, transparent 70%)', pointerEvents: 'none' }} />
-
-      {/* Header */}
-      <div style={{ marginBottom: 14, paddingTop: 4 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#00ffdd', letterSpacing: '0.22em', textTransform: 'uppercase', marginBottom: 5 }}>◈ Monthly Wrap-Up ◈</div>
-        <div style={{ fontSize: 24, fontWeight: 900, color: '#ffffff', lineHeight: 1.05, letterSpacing: '-0.01em' }}>{report.month}</div>
-      </div>
-
-      {/* 2×2 big stat grid + win rates below */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-        {[
-          { label: 'Sessions', value: String(report.total_sessions), color: '#00ffdd' },
-          { label: 'Hours', value: totalHours, color: '#ff0080' },
-          { label: 'Avg/Session', value: `${report.avg_min_per_session}m`, color: '#bf80ff' },
-          { label: 'Matches', value: String(report.total_matches), color: '#ffe600' },
-        ].map((stat) => (
-          <div key={stat.label} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${stat.color}33`, borderRadius: 10, padding: '10px 12px', boxShadow: `inset 0 0 20px ${stat.color}10` }}>
-            <div style={{ fontSize: 24, fontWeight: 900, color: stat.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{stat.value}</div>
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Win rates row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-        {[
-          { label: 'Singles', value: report.total_matches_singles > 0 ? `${report.win_rate_singles}%` : '—', color: '#00ffdd' },
-          { label: 'Doubles', value: report.total_matches_doubles > 0 ? `${report.win_rate_doubles}%` : '—', color: '#ff0080' },
-        ].map((stat) => (
-          <div key={stat.label} style={{ background: 'rgba(255,255,255,0.04)', border: `1px solid ${stat.color}33`, borderRadius: 10, padding: '10px 12px', boxShadow: `inset 0 0 20px ${stat.color}10` }}>
-            <div style={{ fontSize: 24, fontWeight: 900, color: stat.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{stat.value}</div>
-            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.4)', marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Separator */}
-      <div style={{ height: 1, background: 'linear-gradient(90deg, transparent, rgba(255,0,128,0.4), rgba(0,255,221,0.4), transparent)', marginBottom: 10 }} />
-
-      {/* Racquet usage */}
-      <div style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#00ffdd', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 8 }}>▸ Racquet Usage</div>
-        {usageTop5.slice(0, 3).map((rq, i) => {
-          const pct = usageTop5[0].sessions > 0 ? (rq.sessions / usageTop5[0].sessions) * 100 : 0
-          return (
-            <div key={rq.racquet_id} style={{ marginBottom: 6 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                <span style={{ fontSize: 10, color: '#e2e8f0', fontWeight: 600 }}>{i === 0 ? '★ ' : ''}{rq.racquet_name}</span>
-                <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{rq.sessions}s · {fmtMin(rq.total_min)}</span>
-              </div>
-              <div style={{ height: 3, background: 'rgba(255,255,255,0.08)', borderRadius: 2 }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? '#00ffdd' : '#ff0080', borderRadius: 2 }} />
+              <div style={{ height: 5, background: p.panel, borderRadius: 3, overflow: 'hidden', border: `1px solid ${p.panelBorder}` }}>
+                <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? p.brand : p.accent, borderRadius: 3 }} />
               </div>
             </div>
           )
@@ -250,288 +75,37 @@ function NeonCard({ report, cardRef }: CardProps) {
       {/* Milestones */}
       {report.notable_results.length > 0 && (
         <div style={{ flex: 1, minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#ff0080', textTransform: 'uppercase', letterSpacing: '0.18em', marginBottom: 6 }}>▸ Milestones</div>
-          {report.notable_results.slice(0, 4).map((s) => {
-            const isWin = s.notable_tag.toLowerCase().includes('win')
-            const isLoss = s.notable_tag.toLowerCase().includes('loss')
-            const accentColor = isWin ? '#00ffdd' : isLoss ? '#ff0080' : '#ffe600'
+          <StorySectionLabel theme={theme}>Milestones</StorySectionLabel>
+          {report.notable_results.slice(0, 4).map((s: NotableSession) => {
+            const tone = notableTone(s.notable_tag, p)
             return (
-              <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 9px', marginBottom: 4, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 8 }}>
-                <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
+              <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, background: p.panel, border: `1px solid ${p.panelBorder}`, borderRadius: 8, padding: '7px 10px', marginBottom: 5 }}>
+                <span style={{ display: 'inline-flex', width: 22, height: 22, alignItems: 'center', justifyContent: 'center', borderRadius: 6, background: p.brandSoft, color: p.brand }}>
+                  {s.notable_tag.toLowerCase().includes('training')
+                    ? <Dumbbell size={12} />
+                    : s.notable_tag.toLowerCase().includes('win')
+                    ? <Trophy size={12} />
+                    : <Target size={12} />}
+                </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, lineHeight: 1.2, color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
-                  <div style={{ fontSize: 8, lineHeight: 1.2, color: 'rgba(255,255,255,0.3)' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600, lineHeight: 1.25, color: p.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.name || s.racquet_name}</div>
+                  <div style={{ fontSize: 9, lineHeight: 1.2, color: p.textMuted }}>{s.date} · {fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
                 </div>
-                <span style={{ fontSize: 7, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.05em', color: accentColor, border: `1px solid ${accentColor}`, borderRadius: 4, padding: '2px 5px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
+                <span style={{ fontSize: 8, fontWeight: 700, lineHeight: 1.2, color: tone, border: `1px solid ${tone}`, borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{s.notable_tag}</span>
               </div>
             )
           })}
         </div>
       )}
-
-      {/* Footer */}
-      <div style={{ marginTop: 'auto', paddingTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: '#00ffdd', letterSpacing: '0.05em' }}>🎾 trackquet</span>
-        <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.2)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Track Your Game</span>
-      </div>
-    </div>
+    </>
   )
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// CLAY — warm amber / dark brown (premium tennis aesthetic)
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function ClayCard({ report, cardRef }: CardProps) {
-  const totalHours = (report.total_minutes / 60).toFixed(1)
-  const usageTop5 = report.racquet_usage.slice(0, 5)
-  const ff = FONT_SANS
-  const ffSans = FONT_SANS
-  return (
-    <div
-      ref={cardRef}
-      style={{
-        width: 360, height: 640,
-        background: 'linear-gradient(160deg, #1a0800 0%, #2d1200 45%, #1a0800 100%)',
-        borderRadius: 16, overflow: 'hidden',
-        fontFamily: ff,
-        color: '#fef3c7', padding: '28px 22px 20px',
-        display: 'flex', flexDirection: 'column', boxSizing: 'border-box', position: 'relative',
-      }}
-    >
-      {/* Top gold bar */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'linear-gradient(90deg, #92400e, #f59e0b, #92400e)' }} />
-      {/* Faint court lines */}
-      <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 1, height: '100%', background: 'rgba(245,158,11,0.07)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', top: '35%', left: 0, right: 0, height: 1, background: 'rgba(245,158,11,0.07)', pointerEvents: 'none' }} />
-
-      {/* Header */}
-      <div style={{ marginBottom: 14, textAlign: 'center' }}>
-        <div style={{ fontSize: 9, fontWeight: 400, color: '#f59e0b', letterSpacing: '0.25em', textTransform: 'uppercase', marginBottom: 5 }}>─── Monthly Wrap-Up ───</div>
-        <div style={{ fontSize: 24, fontWeight: 700, color: '#fef3c7', lineHeight: 1.1 }}>{report.month}</div>
-      </div>
-
-      {/* 3-stat row */}
-      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 10, padding: '12px 8px', marginBottom: 10 }}>
-        {[
-          { label: 'Sessions', value: String(report.total_sessions) },
-          { label: 'Hours', value: totalHours },
-          { label: 'Matches', value: String(report.total_matches) },
-        ].map((stat, i) => (
-          <div key={stat.label} style={{ textAlign: 'center', flex: 1, borderRight: i < 2 ? '1px solid rgba(245,158,11,0.2)' : 'none' }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#f59e0b', lineHeight: 1, fontFamily: ffSans }}>{stat.value}</div>
-            <div style={{ fontSize: 9, color: '#d97706', marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Win rates row */}
-      <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', background: 'rgba(217,119,6,0.08)', border: '1px solid rgba(217,119,6,0.2)', borderRadius: 10, padding: '12px 8px', marginBottom: 10 }}>
-        {[
-          { label: 'Singles', value: report.total_matches_singles > 0 ? `${report.win_rate_singles}%` : '—' },
-          { label: 'Doubles', value: report.total_matches_doubles > 0 ? `${report.win_rate_doubles}%` : '—' },
-        ].map((stat, i) => (
-          <div key={stat.label} style={{ textAlign: 'center', flex: 1, borderRight: i < 1 ? '1px solid rgba(217,119,6,0.2)' : 'none' }}>
-            <div style={{ fontSize: 22, fontWeight: 700, color: '#d97706', lineHeight: 1, fontFamily: ffSans }}>{stat.value}</div>
-            <div style={{ fontSize: 9, color: '#92400e', marginTop: 3, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Avg session */}
-      <div style={{ textAlign: 'center', marginBottom: 10 }}>
-        <span style={{ fontSize: 10, color: '#d97706', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Avg. Session · </span>
-        <span style={{ fontSize: 16, fontWeight: 700, color: '#fef3c7', fontFamily: ffSans }}>{report.avg_min_per_session} min</span>
-      </div>
-
-      {/* Divider */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-        <div style={{ flex: 1, height: 1, background: 'rgba(245,158,11,0.25)' }} />
-        <span style={{ fontSize: 12 }}>🎾</span>
-        <div style={{ flex: 1, height: 1, background: 'rgba(245,158,11,0.25)' }} />
-      </div>
-
-      {/* Racquet usage */}
-      <div style={{ marginBottom: 8 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 6 }}>Racquet Usage</div>
-        {usageTop5.slice(0, 3).map((rq, i) => {
-          const pct = usageTop5[0].sessions > 0 ? (rq.sessions / usageTop5[0].sessions) * 100 : 0
-          return (
-            <div key={rq.racquet_id} style={{ marginBottom: 6 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2 }}>
-                <span style={{ fontSize: 11, color: '#fef3c7', fontFamily: ffSans }}>{i === 0 ? '👑 ' : ''}{rq.racquet_name}</span>
-                <span style={{ fontSize: 10, color: '#d97706', fontFamily: ffSans }}>{rq.sessions} sessions</span>
-              </div>
-              <div style={{ height: 4, background: 'rgba(245,158,11,0.1)', borderRadius: 2 }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? 'linear-gradient(90deg, #f59e0b, #fbbf24)' : 'rgba(245,158,11,0.4)', borderRadius: 2 }} />
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Milestones */}
-      {report.notable_results.length > 0 && (
-        <div style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#d97706', textTransform: 'uppercase', letterSpacing: '0.15em', marginBottom: 6 }}>Milestones</div>
-          {report.notable_results.slice(0, 4).map((s) => (
-            <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 8px', marginBottom: 4, background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 8 }}>
-              <span style={{ fontSize: 12 }}>{notableIcon(s.notable_tag)}</span>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 10, fontWeight: 600, lineHeight: 1.2, color: '#fef3c7', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.name || s.racquet_name}</div>
-                <div style={{ fontSize: 8, lineHeight: 1.2, color: '#d97706', fontFamily: ffSans }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
-              </div>
-              <span style={{ fontSize: 7, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.04em', background: 'rgba(245,158,11,0.2)', color: '#f59e0b', borderRadius: 4, padding: '2px 5px', whiteSpace: 'nowrap', fontFamily: ffSans }}>{s.notable_tag}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Footer */}
-      <div style={{ marginTop: 'auto', paddingTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid rgba(245,158,11,0.2)' }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', fontFamily: ffSans, letterSpacing: '0.05em' }}>🎾 trackquet</span>
-        <span style={{ fontSize: 9, color: 'rgba(254,243,199,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: ffSans }}>Track Your Game</span>
-      </div>
-    </div>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// FROST — clean light / white minimal
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function FrostCard({ report, cardRef }: CardProps) {
-  const totalHours = (report.total_minutes / 60).toFixed(1)
-  const usageTop5 = report.racquet_usage.slice(0, 5)
-  return (
-    <div
-      ref={cardRef}
-      style={{
-        width: 360, height: 640,
-        background: '#f8fafc',
-        borderRadius: 16, overflow: 'hidden',
-        fontFamily: FONT_SANS,
-        color: '#0f172a', padding: '28px 22px 20px',
-        display: 'flex', flexDirection: 'column', boxSizing: 'border-box', position: 'relative',
-      }}
-    >
-      {/* Top accent stripe */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 6, background: 'linear-gradient(90deg, #4f46e5, #7c3aed, #0ea5e9)' }} />
-      {/* Decorative circle */}
-      <div style={{ position: 'absolute', top: -80, right: -80, width: 220, height: 220, borderRadius: '50%', background: 'rgba(79,70,229,0.07)', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -60, left: -60, width: 180, height: 180, borderRadius: '50%', background: 'rgba(14,165,233,0.06)', pointerEvents: 'none' }} />
-
-      {/* Header */}
-      <div style={{ marginBottom: 14, paddingTop: 4 }}>
-        <div style={{ fontSize: 10, fontWeight: 600, color: '#6366f1', letterSpacing: '0.12em', textTransform: 'uppercase', marginBottom: 3 }}>Monthly Wrap-Up</div>
-        <div style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', lineHeight: 1.05, letterSpacing: '-0.02em' }}>{report.month}</div>
-      </div>
-
-      {/* 4-stat pill grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-        {[
-          { label: 'Sessions', value: String(report.total_sessions), bg: '#ede9fe', color: '#4f46e5' },
-          { label: 'Hours', value: totalHours, bg: '#e0f2fe', color: '#0369a1' },
-          { label: 'Matches', value: String(report.total_matches), bg: '#fef3c7', color: '#92400e' },
-          { label: 'Avg/Session', value: `${report.avg_min_per_session}m`, bg: '#fce7f3', color: '#be185d' },
-        ].map((stat) => (
-          <div key={stat.label} style={{ background: stat.bg, borderRadius: 12, padding: '10px 12px' }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: stat.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{stat.value}</div>
-            <div style={{ fontSize: 9, color: stat.color, opacity: 0.7, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Win rates row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-        {[
-          { label: 'Singles', value: report.total_matches_singles > 0 ? `${report.win_rate_singles}%` : '—', bg: '#dcfce7', color: '#15803d' },
-          { label: 'Doubles', value: report.total_matches_doubles > 0 ? `${report.win_rate_doubles}%` : '—', bg: '#fed7aa', color: '#92400e' },
-        ].map((stat) => (
-          <div key={stat.label} style={{ background: stat.bg, borderRadius: 12, padding: '10px 12px' }}>
-            <div style={{ fontSize: 22, fontWeight: 800, color: stat.color, lineHeight: 1, letterSpacing: '-0.02em' }}>{stat.value}</div>
-            <div style={{ fontSize: 9, color: stat.color, opacity: 0.7, marginTop: 2, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>{stat.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* Divider */}
-      <div style={{ height: 1, background: '#e2e8f0', marginBottom: 10 }} />
-
-      {/* Racquet usage */}
-      <div style={{ marginBottom: 10 }}>
-        <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 8 }}>Racquet Usage</div>
-        {usageTop5.slice(0, 3).map((rq, i) => {
-          const pct = usageTop5[0].sessions > 0 ? (rq.sessions / usageTop5[0].sessions) * 100 : 0
-          return (
-            <div key={rq.racquet_id} style={{ marginBottom: 6 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2, alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                  {i === 0 && <span style={{ fontSize: 8, fontWeight: 700, background: '#4f46e5', color: '#fff', borderRadius: 4, padding: '1px 5px' }}>TOP</span>}
-                  <span style={{ fontSize: 10, color: '#1e293b', fontWeight: 600 }}>{rq.racquet_name}</span>
-                </div>
-                <span style={{ fontSize: 9, color: '#64748b' }}>{rq.sessions}s · {fmtMin(rq.total_min)}</span>
-              </div>
-              <div style={{ height: 4, background: '#e2e8f0', borderRadius: 3 }}>
-                <div style={{ height: '100%', width: `${pct}%`, background: i === 0 ? '#4f46e5' : '#a5b4fc', borderRadius: 3 }} />
-              </div>
-            </div>
-          )
-        })}
-      </div>
-
-      {/* Milestones */}
-      {report.notable_results.length > 0 && (
-        <div style={{ flex: 1, minHeight: 0 }}>
-          <div style={{ fontSize: 9, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.12em', marginBottom: 6 }}>Milestones</div>
-          {report.notable_results.slice(0, 4).map((s) => {
-            const isWin = s.notable_tag.toLowerCase().includes('win')
-            const isLoss = s.notable_tag.toLowerCase().includes('loss')
-            return (
-              <div key={`${s.session_id}-${s.notable_tag}`} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 9px', marginBottom: 4, background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
-                <span style={{ fontSize: 13 }}>{notableIcon(s.notable_tag)}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 10, fontWeight: 600, lineHeight: 1.2, color: '#0f172a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name || s.racquet_name}</div>
-                  <div style={{ fontSize: 8, lineHeight: 1.2, color: '#94a3b8' }}>{fmtMin(s.duration_min)}{s.match_score ? ` · ${s.match_score}` : ''}</div>
-                </div>
-                <span style={{ fontSize: 7, fontWeight: 700, lineHeight: 1.2, textTransform: 'uppercase', letterSpacing: '0.04em', background: isWin ? '#dcfce7' : isLoss ? '#fee2e2' : '#fef3c7', color: isWin ? '#15803d' : isLoss ? '#dc2626' : '#b45309', borderRadius: 5, padding: '2px 6px', whiteSpace: 'nowrap' }}>{s.notable_tag}</span>
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* Footer */}
-      <div style={{ marginTop: 'auto', paddingTop: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #e2e8f0' }}>
-        <span style={{ fontSize: 13, fontWeight: 800, color: '#4f46e5', letterSpacing: '0.01em' }}>🎾 trackquet</span>
-        <span style={{ fontSize: 9, color: '#94a3b8', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Track Your Game</span>
-      </div>
-    </div>
-  )
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Dispatcher
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function StoryCard({ report, cardRef, theme }: CardProps & { theme: Theme }) {
-  switch (theme) {
-    case 'neon':  return <NeonCard  report={report} cardRef={cardRef} />
-    case 'clay':  return <ClayCard  report={report} cardRef={cardRef} />
-    case 'frost': return <FrostCard report={report} cardRef={cardRef} />
-    default:      return <AuroraCard report={report} cardRef={cardRef} />
-  }
-}
-
-// ─── Story Card (the actual PNG content) ────────────────────────────────────
-
-// (kept for reference — now replaced by themed cards above)
-
-// ─── Main Modal ──────────────────────────────────────────────────────────────
+// ─── Modal ───────────────────────────────────────────────────────────────────
 
 export default function MonthlyReportModal({ report, onClose }: Props) {
   const cardRef = useRef<HTMLDivElement>(null)
-  const [theme, setTheme] = useState<Theme>('aurora')
+  const [theme, setTheme] = useState<StoryTheme>('light')
   const [exporting, setExporting] = useState(false)
   const [shareSupported] = useState(() => {
     if (typeof navigator === 'undefined' || !navigator.share) return false
@@ -543,31 +117,10 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
     }
   })
 
-  const captureCanvas = useCallback(async (): Promise<Blob> => {
-    if (!cardRef.current) throw new Error('Card not mounted')
-
-    if ('fonts' in document) {
-      await (document as Document & { fonts?: FontFaceSet }).fonts?.ready
-    }
-    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
-
-    const el = cardRef.current
-    const dataUrl = await toPng(el, {
-      pixelRatio: 3,        // 360×3 = 1080, 640×3 = 1920 → full story resolution
-      width: 360,
-      height: el.offsetHeight,
-      cacheBust: true,
-      skipFonts: false,     // embed Plus Jakarta Sans into exported PNG
-    })
-
-    const res = await fetch(dataUrl)
-    return res.blob()
-  }, [])
-
   const handleSave = async () => {
     setExporting(true)
     try {
-      const blob = await captureCanvas()
+      const blob = await captureStory(cardRef.current)
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -582,23 +135,13 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
   const handleShare = async () => {
     setExporting(true)
     try {
-      const blob = await captureCanvas()
-      const file = new File([blob], `trackquet-${report.month.replace(' ', '-').toLowerCase()}.png`, {
-        type: 'image/png',
-      })
+      const blob = await captureStory(cardRef.current)
+      const file = new File([blob], `trackquet-${report.month.replace(' ', '-').toLowerCase()}.png`, { type: 'image/png' })
       if (!navigator.share) throw new Error('Share is not supported')
-      if (navigator.canShare && !navigator.canShare({ files: [file] })) {
-        throw new Error('Sharing files is not supported')
-      }
-      await navigator.share({
-        title: `Trackquet — ${report.month}`,
-        text: `My tennis wrap-up for ${report.month} 🎾`,
-        files: [file],
-      })
+      if (navigator.canShare && !navigator.canShare({ files: [file] })) throw new Error('Sharing files not supported')
+      await navigator.share({ title: `Trackquet — ${report.month}`, text: `My wrap-up for ${report.month}`, files: [file] })
     } catch (err) {
-      if (err instanceof Error && err.name !== 'AbortError') {
-        console.error('Share failed:', err)
-      }
+      if (err instanceof Error && err.name !== 'AbortError') console.error('Share failed:', err)
     } finally {
       setExporting(false)
     }
@@ -611,72 +154,36 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
       onClick={onClose}
     >
       <div className="flex min-h-full items-center justify-center p-4 py-6">
-      <div
-        className="relative flex flex-col items-center gap-3"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Close button */}
-        <button
-          onClick={onClose}
-          className="absolute -top-2 -right-2 z-10 w-8 h-8 rounded-full bg-gray-700 hover:bg-gray-600 text-white flex items-center justify-center text-sm shadow-lg"
-        >
-          ✕
-        </button>
-
-        {/* Theme switcher */}
-        <div className="flex gap-2 w-full max-w-[360px]">
-          {THEMES.map((t) => (
-            <button
-              key={t.id}
-              onClick={() => setTheme(t.id)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                theme === t.id
-                  ? 'bg-indigo-600 text-white shadow-lg scale-105'
-                  : 'bg-white/10 text-gray-300 hover:bg-white/20'
-              }`}
-            >
-              <span className="text-base">{t.emoji}</span>
-              <span>{t.label}</span>
-            </button>
-          ))}
-        </div>
-
-        {/* Story card */}
-        <StoryCard report={report} cardRef={cardRef} theme={theme} />
-
-        {/* Action buttons */}
-        <div className="flex gap-3 w-full max-w-[360px]">
+        <div className="relative flex flex-col items-center gap-3" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={handleSave}
-            disabled={exporting}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-60 transition-colors shadow"
+            onClick={onClose}
+            className="absolute -top-2 -right-2 z-10 h-8 w-8 rounded-full bg-ink-700 hover:bg-ink-600 text-white flex items-center justify-center shadow-lift"
+            aria-label="Close"
           >
-            {exporting ? (
-              <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24" fill="none">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-              </svg>
-            ) : (
-              '⬇️'
-            )}
-            Save PNG
+            <X className="h-4 w-4" />
           </button>
 
-          {shareSupported && (
-            <button
-              onClick={handleShare}
-              disabled={exporting}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl font-semibold text-sm bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white disabled:opacity-60 transition-all shadow"
-            >
-              📲 Share Story
-            </button>
-          )}
-        </div>
+          <StoryThemeToggle theme={theme} onChange={setTheme} />
 
-        <p className="text-xs text-gray-400 text-center">
-          Exported at 1080×1920 (Instagram Story)
-        </p>
-      </div>
+          <StoryFrame cardRef={cardRef} theme={theme} eyebrow="Monthly Wrap-Up" title={report.month}>
+            <MonthlyBody report={report} theme={theme} />
+          </StoryFrame>
+
+          <div className="flex gap-3 w-full max-w-[360px]">
+            <button onClick={handleSave} disabled={exporting} className="btn-primary flex-1">
+              {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Save PNG
+            </button>
+            {shareSupported && (
+              <button onClick={handleShare} disabled={exporting} className="btn-secondary flex-1">
+                <Share2 className="h-4 w-4" />
+                Share
+              </button>
+            )}
+          </div>
+
+          <p className="text-caption text-ink-400 text-center">Exported at 1080×1920 (Instagram Story)</p>
+        </div>
       </div>
     </div>
   )

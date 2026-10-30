@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { CircleDot } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { loginUser } from '../api/client'
 import toast from 'react-hot-toast'
@@ -32,52 +33,50 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-ink-50 flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <span className="text-5xl">🎾</span>
-          <h1 className="text-2xl font-bold text-court-700 mt-3">Trackquet</h1>
-          <p className="text-gray-500 text-sm mt-1">Tennis Racquet Usage Tracker</p>
+          <span className="inline-flex h-14 w-14 items-center justify-center rounded-card bg-court-600 text-white shadow-lift">
+            <CircleDot className="h-7 w-7" strokeWidth={2.5} />
+          </span>
+          <h1 className="text-h1 text-ink-900 mt-4">Trackquet</h1>
+          <p className="text-caption text-ink-500 mt-1">Racquet Usage Tracker</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
-          <h2 className="text-lg font-semibold text-gray-800 mb-6">Sign in</h2>
+        <div className="card p-8">
+          <h2 className="text-h2 text-ink-900 mb-6">Sign in</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="label">Username</label>
               <input
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-court-500"
+                className="input"
                 placeholder="your_username"
                 required
                 autoFocus
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label className="label">Password</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-court-500"
+                className="input"
                 placeholder="••••••"
                 required
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-court-600 hover:bg-court-700 disabled:opacity-50 text-white font-semibold py-2 rounded-lg text-sm transition-colors"
-            >
+            <button type="submit" disabled={loading} className="btn-primary w-full">
               {loading ? 'Signing in…' : 'Sign in'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-6">
+          <p className="text-center text-caption text-ink-500 mt-6">
             Don't have an account?{' '}
-            <Link to="/register" className="text-court-600 font-medium hover:underline">
+            <Link to="/register" className="text-court-600 font-semibold hover:underline">
               Register
             </Link>
           </p>

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { X } from 'lucide-react'
 import type { StringPreset } from '../types'
 import { fetchStringPresets } from '../api/client'
 
@@ -111,8 +112,8 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
       <div className="flex min-h-full items-center justify-center px-4 py-8">
       <div className="card w-full max-w-lg p-6">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold">Add New Racquet</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl">×</button>
+          <h2 className="text-h2 text-ink-900">Add New Racquet</h2>
+          <button onClick={onClose} className="btn-icon" aria-label="Close"><X className="h-4 w-4" /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -186,16 +187,16 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
             <button
               type="button"
               onClick={() => { setIsHybrid(!isHybrid); setThresholdHours('') }}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isHybrid ? 'bg-court-600' : 'bg-gray-200'}`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${isHybrid ? 'bg-court-600' : 'bg-ink-200'}`}
             >
               <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${isHybrid ? 'translate-x-6' : 'translate-x-1'}`} />
             </button>
-            <span className="text-sm font-medium text-gray-700">Hybrid setup (two different strings)</span>
+            <span className="text-caption font-medium text-ink-700">Hybrid setup (two different strings)</span>
           </div>
 
           {/* Main string */}
-          <div className="rounded-xl border border-gray-200 p-4 space-y-3">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{isHybrid ? 'Main Strings' : 'String'}</p>
+          <div className="rounded-card border border-ink-200 p-4 space-y-3">
+            <p className="text-caption font-semibold text-ink-500 uppercase tracking-wide">{isHybrid ? 'Main Strings' : 'String'}</p>
             <div>
               <label className="label">String Name</label>
               <select className="input" value={stringName} onChange={(e) => handleStringChange(e.target.value)}>
@@ -214,7 +215,7 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
               <div className="flex flex-wrap gap-2">
                 {GAUGES.map((g) => (
                   <button key={g} type="button" onClick={() => handleGaugeChange(g)}
-                    className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${gauge === g ? 'bg-court-600 text-white border-court-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                    className={`px-3 py-1.5 rounded-control border text-caption font-medium transition-colors ${gauge === g ? 'bg-court-600 text-white border-court-600' : 'bg-white text-ink-700 border-ink-300 hover:bg-ink-50'}`}>
                     {g}
                     {gauge !== g && <span className="ml-1 text-xs opacity-60">{GAUGE_DEFAULTS[g]}h</span>}
                   </button>
@@ -225,8 +226,8 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
 
           {/* Cross string (hybrid only) */}
           {isHybrid && (
-            <div className="rounded-xl border border-court-200 bg-court-50/40 p-4 space-y-3">
-              <p className="text-xs font-semibold text-court-700 uppercase tracking-wide">Cross Strings</p>
+            <div className="rounded-card border border-court-200 bg-court-50/40 p-4 space-y-3">
+              <p className="text-caption font-semibold text-court-700 uppercase tracking-wide">Cross Strings</p>
               <div>
                 <label className="label">String Name</label>
                 <select className="input" value={crossStringName} onChange={(e) => { setCrossStringName(e.target.value); setThresholdHours('') }}>
@@ -245,7 +246,7 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
                 <div className="flex flex-wrap gap-2">
                   {GAUGES.map((g) => (
                     <button key={g} type="button" onClick={() => handleCrossGaugeChange(g)}
-                      className={`px-3 py-1.5 rounded-lg border text-sm font-medium transition-colors ${crossGauge === g ? 'bg-court-600 text-white border-court-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}>
+                      className={`px-3 py-1.5 rounded-control border text-caption font-medium transition-colors ${crossGauge === g ? 'bg-court-600 text-white border-court-600' : 'bg-white text-ink-700 border-ink-300 hover:bg-ink-50'}`}>
                       {g}
                       {crossGauge !== g && <span className="ml-1 text-xs opacity-60">{GAUGE_DEFAULTS[g]}h</span>}
                     </button>
@@ -254,8 +255,8 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
               </div>
               {gauge && crossGauge && (
                 <p className="text-xs text-court-700 font-medium">
-                  ⚡ Hybrid threshold auto-set to {hybridThreshold(gauge, crossGauge)}h
-                  <span className="text-gray-400 font-normal ml-1">(main {GAUGE_DEFAULTS[gauge]}h × 55% + cross {GAUGE_DEFAULTS[crossGauge]}h × 45%)</span>
+                  Hybrid threshold auto-set to {hybridThreshold(gauge, crossGauge)}h
+                  <span className="text-ink-400 font-normal ml-1">(main {GAUGE_DEFAULTS[gauge]}h × 55% + cross {GAUGE_DEFAULTS[crossGauge]}h × 45%)</span>
                 </p>
               )}
             </div>
@@ -267,11 +268,11 @@ export default function AddRacquetModal({ onClose, onSave, loading }: Props) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <input type="number" className="input" value={mainTension} onChange={(e) => setMainTension(e.target.value)} placeholder="Main (e.g. 52)" min="20" max="80" step="0.5" />
-                <p className="text-xs text-gray-400 mt-1 text-center">Main</p>
+                <p className="text-caption text-ink-400 mt-1 text-center">Main</p>
               </div>
               <div>
                 <input type="number" className="input" value={crossTension} onChange={(e) => setCrossTension(e.target.value)} placeholder="Cross (e.g. 50)" min="20" max="80" step="0.5" />
-                <p className="text-xs text-gray-400 mt-1 text-center">Cross</p>
+                <p className="text-caption text-ink-400 mt-1 text-center">Cross</p>
               </div>
             </div>
           </div>

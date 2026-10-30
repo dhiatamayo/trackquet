@@ -1,47 +1,49 @@
 import { Link } from 'react-router-dom'
+import { Target, Trophy, ArrowRight } from 'lucide-react'
 
 export default function Home() {
+  const tiles = [
+    {
+      to: '/dashboard',
+      icon: Target,
+      title: 'My Racquets',
+      desc: 'Track string usage, log sessions, and manage your racquet collection.',
+      cta: 'Go to Racquets',
+    },
+    {
+      to: '/matches',
+      icon: Trophy,
+      title: 'My Matches',
+      desc: 'Create match sessions, manage players, and track scores and standings.',
+      cta: 'Go to Matches',
+    },
+  ]
+
   return (
     <div>
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-gray-900">Welcome to Trackquet</h1>
-        <p className="text-gray-500 mt-2">What would you like to do?</p>
+      <div className="mb-10 max-w-2xl mx-auto text-center">
+        <h1 className="text-display text-ink-900">Your game, tracked.</h1>
+        <p className="text-body text-ink-500 mt-3">
+          Keep tabs on every racquet and match in one place.
+        </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-        {/* My Racquets Card */}
-        <Link
-          to="/dashboard"
-          className="card p-6 hover:shadow-md hover:border-court-200 transition-all group"
-        >
-          <div className="text-4xl mb-4">🎾</div>
-          <h2 className="text-xl font-bold text-gray-900 group-hover:text-court-600 transition-colors">
-            My Racquets
-          </h2>
-          <p className="text-sm text-gray-500 mt-2">
-            Track string usage, log sessions, and manage your racquet collection.
-          </p>
-          <div className="mt-4 text-sm font-medium text-court-600 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-            Go to Racquets <span aria-hidden="true">→</span>
-          </div>
-        </Link>
-
-        {/* My Matches Card */}
-        <Link
-          to="/matches"
-          className="card p-6 hover:shadow-md hover:border-court-200 transition-all group"
-        >
-          <div className="text-4xl mb-4">🏆</div>
-          <h2 className="text-xl font-bold text-gray-900 group-hover:text-court-600 transition-colors">
-            My Matches
-          </h2>
-          <p className="text-sm text-gray-500 mt-2">
-            Create match sessions, manage players, and track scores and standings.
-          </p>
-          <div className="mt-4 text-sm font-medium text-court-600 group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-            Go to Matches <span aria-hidden="true">→</span>
-          </div>
-        </Link>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+        {tiles.map(({ to, icon: Icon, title, desc, cta }) => (
+          <Link key={to} to={to} className="card-interactive group p-6 flex flex-col">
+            <span className="flex h-12 w-12 items-center justify-center rounded-control bg-court-50 text-court-600 ring-1 ring-court-100 mb-5">
+              <Icon className="h-6 w-6" strokeWidth={2} />
+            </span>
+            <h2 className="text-h2 text-ink-900 group-hover:text-court-700 transition-colors">
+              {title}
+            </h2>
+            <p className="text-caption text-ink-500 mt-2 flex-1">{desc}</p>
+            <div className="mt-5 inline-flex items-center gap-1.5 text-caption font-semibold text-court-600">
+              {cta}
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { Plus, Trophy, Calendar, Users } from 'lucide-react'
 import { listMatchSessions } from '../api/matches'
 import CreateMatchModal from '../components/CreateMatchModal'
 import type { MatchSession } from '../types'
@@ -14,7 +15,6 @@ export default function MatchList() {
   useEffect(() => {
     listMatchSessions()
       .then((data) => {
-        // Sort by date descending
         const sorted = [...data].sort(
           (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
         )
@@ -24,35 +24,26 @@ export default function MatchList() {
       .finally(() => setLoading(false))
   }, [])
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    })
-  }
+  const formatDate = (dateStr: string) =>
+    new Date(dateStr).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
 
   const formatLabel = (format: string) =>
-    format
-      .split('_')
-      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-      .join(' ')
+    format.split('_').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
 
   return (
     <div>
       {/* Page header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-end justify-between mb-6 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">My Matches</h1>
-          <p className="text-sm text-gray-500 mt-1">Organize and track your match sessions</p>
+          <h1 className="text-h1 text-ink-900">My Matches</h1>
+          <p className="text-caption text-ink-500 mt-1">Organize and track your match sessions</p>
         </div>
         <button className="btn-primary" onClick={() => setShowCreateModal(true)}>
-          + Create Match Session
+          <Plus className="h-4 w-4" />
+          Create Session
         </button>
       </div>
 
-      {/* Create Match Modal */}
       <CreateMatchModal
         isOpen={showCreateModal}
         onClose={() => setShowCreateModal(false)}
@@ -64,22 +55,25 @@ export default function MatchList() {
 
       {/* Content */}
       {loading ? (
-        <div className="text-center py-16 text-gray-400">Loading…</div>
+        <div className="text-center py-16 text-caption text-ink-400">Loading…</div>
       ) : sessions.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-5xl mb-4">🏸</p>
-          <p className="text-gray-500 text-lg">No match sessions yet.</p>
-          <p className="text-gray-400 text-sm mt-1">Create your first one!</p>
+        <div className="card flex flex-col items-center text-center py-16 px-6">
+          <span className="flex h-14 w-14 items-center justify-center rounded-card bg-court-50 text-court-600 ring-1 ring-court-100 mb-4">
+            <Trophy className="h-7 w-7" />
+          </span>
+          <p className="text-h2 text-ink-900">No match sessions yet</p>
+          <p className="text-caption text-ink-500 mt-1">Create your first one to start tracking scores.</p>
           <button className="btn-primary mt-6" onClick={() => setShowCreateModal(true)}>
-            + Create Match Session
+            <Plus className="h-4 w-4" />
+            Create Session
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {sessions.map((session) => (
             <div
               key={session.id}
-              className="card p-5 cursor-pointer hover:shadow-md transition-shadow"
+              className="card-interactive p-5 cursor-pointer"
               onClick={() => navigate(`/matches/${session.id}`)}
               role="button"
               tabIndex={0}
@@ -90,16 +84,18 @@ export default function MatchList() {
                 }
               }}
             >
-              <h3 className="text-lg font-semibold text-gray-900 truncate">{session.name}</h3>
-              <p className="text-sm text-gray-500 mt-1">{formatDate(session.date)}</p>
-              <div className="flex flex-wrap gap-2 mt-3">
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {session.sport_type === 'tennis' ? '🎾 Tennis' : '🏸 Padel'}
+              <h3 className="text-h2 text-ink-900 truncate">{session.name}</h3>
+              <p className="flex items-center gap-1.5 text-caption text-ink-500 mt-1">
+                <Calendar className="h-3.5 w-3.5 text-ink-400" />
+                {formatDate(session.date)}
+              </p>
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                <span className="chip-brand">
+                  {session.sport_type === 'tennis' ? 'Tennis' : 'Padel'}
                 </span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                  {formatLabel(session.format)}
-                </span>
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <span className="chip">{formatLabel(session.format)}</span>
+                <span className="chip">
+                  <Users className="h-3.5 w-3.5 text-ink-400" />
                   {session.match_type === 'singles' ? 'Singles' : 'Doubles'}
                 </span>
               </div>

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { Matchup, MatchPlayer, MatchupPlayer } from '../types'
 
 interface DrawScheduleProps {
@@ -71,7 +72,7 @@ export default function DrawSchedule({ matchups, players, onMatchupClick }: Draw
 
   if (matchups.length === 0) {
     return (
-      <div className="text-center text-gray-500 py-8">
+      <div className="text-center text-ink-500 py-8">
         <p>No matchups scheduled yet.</p>
       </div>
     )
@@ -84,19 +85,19 @@ export default function DrawSchedule({ matchups, players, onMatchupClick }: Draw
         <button
           onClick={() => setCurrentRoundIdx((i) => Math.max(0, i - 1))}
           disabled={currentRoundIdx === 0}
-          className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-control border border-ink-300 text-caption font-medium text-ink-700 hover:bg-ink-100 disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          ← Prev
+          <ChevronLeft className="h-4 w-4" /> Prev
         </button>
-        <span className="text-sm font-semibold text-gray-700">
+        <span className="text-caption font-semibold text-ink-700">
           Round {currentRound} of {totalRounds}
         </span>
         <button
           onClick={() => setCurrentRoundIdx((i) => Math.min(totalRounds - 1, i + 1))}
           disabled={currentRoundIdx >= totalRounds - 1}
-          className="px-3 py-1.5 rounded-lg border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-control border border-ink-300 text-caption font-medium text-ink-700 hover:bg-ink-100 disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          Next →
+          Next <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
@@ -117,28 +118,28 @@ export default function DrawSchedule({ matchups, players, onMatchupClick }: Draw
               <div className="flex items-start justify-between gap-2 sm:gap-4">
                 <div className="flex-1 min-w-0 space-y-0.5">
                   {sideA.map((name, idx) => (
-                    <span key={idx} className="font-medium text-gray-900 text-sm sm:text-base block">
+                    <span key={idx} className="font-medium text-ink-900 text-sm sm:text-base block">
                       {name}
                     </span>
                   ))}
                 </div>
                 <div className="shrink-0 text-center px-1 sm:px-3 pt-0.5">
                   {score ? (
-                    <span className="font-bold text-gray-900 text-sm">{score}</span>
+                    <span className="font-bold text-ink-900 text-sm">{score}</span>
                   ) : (
-                    <span className="text-xs text-gray-400">No score</span>
+                    <span className="text-xs text-ink-400">No score</span>
                   )}
                 </div>
                 <div className="flex-1 min-w-0 text-right space-y-0.5">
                   {sideB.map((name, idx) => (
-                    <span key={idx} className="font-medium text-gray-900 text-sm sm:text-base block">
+                    <span key={idx} className="font-medium text-ink-900 text-sm sm:text-base block">
                       {name}
                     </span>
                   ))}
                 </div>
               </div>
               {matchup.court_number != null && (
-                <p className="text-xs text-gray-500 mt-1">Court {matchup.court_number}</p>
+                <p className="text-caption text-ink-500 mt-1">Court {matchup.court_number}</p>
               )}
             </button>
           )
@@ -147,15 +148,15 @@ export default function DrawSchedule({ matchups, players, onMatchupClick }: Draw
 
       {/* Waiting players */}
       {waitingPlayers.length > 0 && (
-        <div className="border-t border-gray-200 pt-3">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <div className="border-t border-ink-200 pt-3">
+          <p className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-2">
             Waiting ({waitingPlayers.length})
           </p>
           <div className="flex flex-wrap gap-1.5">
             {waitingPlayers.map((p) => (
               <span
                 key={p.id}
-                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-gray-100 text-gray-600"
+                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-ink-100 text-ink-600"
               >
                 {p.name}
               </span>
@@ -166,8 +167,8 @@ export default function DrawSchedule({ matchups, players, onMatchupClick }: Draw
 
       {/* Played previous round */}
       {prevRoundPlayers.length > 0 && (
-        <div className="border-t border-gray-200 pt-3 mt-3">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+        <div className="border-t border-ink-200 pt-3 mt-3">
+          <p className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-2">
             Played Previous Round ({prevRoundPlayers.length})
           </p>
           <div className="flex flex-wrap gap-1.5">

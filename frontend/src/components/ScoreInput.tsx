@@ -113,7 +113,7 @@ export default function ScoreInput({
           placeholder="A"
           aria-label="Score Side A"
         />
-        <span className="text-sm text-gray-500 font-medium">-</span>
+        <span className="text-caption text-ink-500 font-medium">-</span>
         <input
           type="number"
           min="0"

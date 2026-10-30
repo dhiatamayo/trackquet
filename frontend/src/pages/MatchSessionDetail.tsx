@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
+import { ArrowLeft, Trash2 } from 'lucide-react'
 import {
   getMatchSession,
   getLeaderboard,
@@ -112,13 +113,13 @@ export default function MatchSessionDetail() {
       .join(' ')
 
   if (loading) {
-    return <div className="text-center py-16 text-gray-400">Loading…</div>
+    return <div className="text-center py-16 text-ink-400">Loading…</div>
   }
 
   if (!session) {
     return (
       <div className="text-center py-16">
-        <p className="text-gray-500 text-lg">Match session not found.</p>
+        <p className="text-ink-500 text-lg">Match session not found.</p>
         <button className="btn-primary mt-4" onClick={() => navigate('/matches')}>
           Back to Matches
         </button>
@@ -131,31 +132,31 @@ export default function MatchSessionDetail() {
       <div className="mb-6">
         <button
           onClick={() => navigate('/matches')}
-          className="text-sm text-gray-500 hover:text-gray-700 mb-2 inline-flex items-center gap-1"
+          className="text-caption text-ink-500 hover:text-ink-700 mb-2 inline-flex items-center gap-1"
         >
-          ← Back to Matches
+          <ArrowLeft className="h-4 w-4" /> Back to Matches
         </button>
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">{session.name}</h1>
-            <p className="text-sm text-gray-500 mt-1">{formatDate(session.date)}</p>
-            <div className="flex flex-wrap gap-2 mt-3">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {session.sport_type === 'tennis' ? '🎾 Tennis' : '🏸 Padel'}
+            <h1 className="text-h1 text-ink-900">{session.name}</h1>
+            <p className="text-caption text-ink-500 mt-1">{formatDate(session.date)}</p>
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              <span className="chip-brand">
+                {session.sport_type === 'tennis' ? 'Tennis' : 'Padel'}
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              <span className="chip">
                 {formatLabel(session.format)}
               </span>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <span className="chip-brand">
                 {session.match_type === 'singles' ? 'Singles' : 'Doubles'}
               </span>
             </div>
           </div>
           <button
             onClick={() => setShowDeleteConfirm(true)}
-            className="text-sm text-red-500 hover:text-red-700 font-medium"
+            className="inline-flex items-center gap-1.5 text-caption text-red-500 hover:text-red-700 font-medium"
           >
-            🗑 Delete
+            <Trash2 className="h-4 w-4" /> Delete
           </button>
         </div>
       </div>
@@ -163,7 +164,7 @@ export default function MatchSessionDetail() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
           <div className="card p-5">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Draw Schedule</h2>
+            <h2 className="text-lg font-semibold text-ink-900 mb-4">Draw Schedule</h2>
             <DrawSchedule
               matchups={session.matchups ?? []}
               players={session.players ?? []}
@@ -175,7 +176,7 @@ export default function MatchSessionDetail() {
         <div className="space-y-6">
           {/* Add Player */}
           <div className="card p-5">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Add Player</h2>
+            <h2 className="text-lg font-semibold text-ink-900 mb-3">Add Player</h2>
             <div className="flex gap-2">
               <input
                 type="text"
@@ -196,14 +197,14 @@ export default function MatchSessionDetail() {
                 {addingPlayer ? '…' : '+ Add'}
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-2">
+            <p className="text-caption text-ink-500 mt-2">
               New matchups will be generated and shuffled with unplayed ones.
             </p>
           </div>
 
           {/* Leaderboard */}
           <div className="card p-5">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Leaderboard</h2>
+            <h2 className="text-lg font-semibold text-ink-900 mb-4">Leaderboard</h2>
             <Leaderboard entries={leaderboard} loading={leaderboardLoading} sessionName={session.name} />
           </div>
         </div>
@@ -237,14 +238,14 @@ export default function MatchSessionDetail() {
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Match Session?</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <h3 className="text-lg font-semibold text-ink-900 mb-2">Delete Match Session?</h3>
+            <p className="text-caption text-ink-600 mb-4">
               This will permanently delete "{session.name}" and all its matchups. This cannot be undone.
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                className="px-4 py-2 rounded-lg border border-ink-200 text-caption font-medium text-ink-700 hover:bg-ink-50"
               >
                 Cancel
               </button>
