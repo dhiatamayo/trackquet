@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ModalPortal from './ModalPortal'
 import { format } from 'date-fns'
 import toast from 'react-hot-toast'
 import { X, Trophy, Dumbbell } from 'lucide-react'
@@ -63,8 +64,9 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40">
-      <div className="flex min-h-full items-center justify-center px-4 py-8">
+    <ModalPortal>
+    <div className="modal-overlay">
+      <div className="modal-shell">
         <div className="card w-full max-w-md p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-5">
@@ -220,5 +222,6 @@ export default function SessionDetailModal({ session, racquetId, onClose, onUpda
         </div>
       </div>
     </div>
+    </ModalPortal>
   )
 }
