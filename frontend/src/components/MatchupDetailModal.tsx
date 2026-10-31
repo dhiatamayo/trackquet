@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react'
+import ModalPortal from './ModalPortal'
 import toast from 'react-hot-toast'
 import { Swords } from 'lucide-react'
 import ScoreInput, { validateScore } from './ScoreInput'
@@ -196,8 +197,9 @@ export default function MatchupDetailModal({
   if (!isOpen || !matchup) return null
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40">
-      <div className="flex min-h-full items-center justify-center px-4 py-8">
+    <ModalPortal>
+    <div className="modal-overlay">
+      <div className="modal-shell">
         <div className="card w-full max-w-md p-6">
           {/* Header */}
           <div className="flex items-start justify-between mb-5">
@@ -334,5 +336,6 @@ export default function MatchupDetailModal({
         </div>
       </div>
     </div>
+    </ModalPortal>
   )
 }

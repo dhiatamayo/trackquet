@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ModalPortal from './ModalPortal'
 import toast from 'react-hot-toast'
 import PlayerInput, { type PlayerEntry } from './PlayerInput'
 import { createMatchSession } from '../api/matches'
@@ -193,8 +194,9 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40">
-      <div className="flex min-h-full items-center justify-center px-4 py-8">
+    <ModalPortal>
+    <div className="modal-overlay">
+      <div className="modal-shell">
         <div className="card w-full max-w-lg p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-bold">Create Match Session</h2>
@@ -409,5 +411,6 @@ export default function CreateMatchModal({ isOpen, onClose, onCreated }: Props) 
         </div>
       </div>
     </div>
+    </ModalPortal>
   )
 }

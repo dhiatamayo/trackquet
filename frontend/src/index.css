@@ -43,6 +43,14 @@
     @apply card transition-all hover:shadow-lift hover:border-ink-300;
   }
 
+  /* ── Modal ── one overlay standard for every pop-up (dim + soft blur) ── */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 overflow-y-auto bg-black/50 backdrop-blur-sm;
+  }
+  .modal-shell {
+    @apply flex min-h-full items-center justify-center px-4 py-8;
+  }
+
   /* ── Form controls ── */
   .input {
     @apply w-full rounded-control border border-ink-300 bg-white px-3 py-2 text-body text-ink-900 placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-court-500 focus:border-court-500 transition-shadow;

@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import ModalPortal from './ModalPortal'
 import { Download, Share2, Loader2, X, Trophy, Target, Dumbbell } from 'lucide-react'
 import type { MonthlyReport, NotableSession } from '../types'
 import {
@@ -148,9 +149,9 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
   }
 
   return (
+    <ModalPortal>
     <div
-      className="fixed inset-0 z-50 overflow-y-auto"
-      style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)' }}
+      className="modal-overlay"
       onClick={onClose}
     >
       <div className="flex min-h-full items-center justify-center p-4 py-6">
@@ -186,5 +187,6 @@ export default function MonthlyReportModal({ report, onClose }: Props) {
         </div>
       </div>
     </div>
+    </ModalPortal>
   )
 }

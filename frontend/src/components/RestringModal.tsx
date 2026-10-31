@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import ModalPortal from './ModalPortal'
 import { X, RefreshCw } from 'lucide-react'
 import type { RestringPayload } from '../types'
 
@@ -78,8 +79,9 @@ export default function RestringModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40">
-      <div className="flex min-h-full items-center justify-center px-4 py-8">
+    <ModalPortal>
+    <div className="modal-overlay">
+      <div className="modal-shell">
       <div className="card w-full max-w-md p-6">
         <div className="flex items-center justify-between mb-5">
           <h2 className="flex items-center gap-2 text-h2 text-ink-900">
@@ -176,6 +178,9 @@ export default function RestringModal({
               )}
             </label>
             <input type="number" className="input" value={thresholdHours} onChange={(e) => setThresholdHours(e.target.value)} placeholder={String(autoThreshold)} min="1" step="1" />
+          </div>
+
+          <div className="flex gap-3 pt-2">
             <button type="submit" className="btn-primary flex-1" disabled={loading}>
               {loading ? 'Saving…' : 'Confirm Restring'}
             </button>
@@ -187,5 +192,6 @@ export default function RestringModal({
       </div>
       </div>
     </div>
+    </ModalPortal>
   )
 }

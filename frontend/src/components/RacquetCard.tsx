@@ -11,10 +11,16 @@ interface Props {
 export default function RacquetCard({ racquet, onDelete }: Props) {
   const hours = racquet.total_hours.toFixed(1)
   const threshold = racquet.threshold_hours
+  const hasSpecs =
+    !!racquet.string_name ||
+    racquet.main_tension > 0 ||
+    racquet.year > 0 ||
+    racquet.head_size > 0 ||
+    racquet.weight > 0
 
   return (
     <div
-      className={`card-interactive p-5 flex flex-col gap-4 ${
+      className={`card-interactive p-5 flex flex-col gap-4 h-full ${
         racquet.needs_restring ? 'border-red-200 ring-1 ring-red-100' : ''
       }`}
     >
@@ -65,32 +71,43 @@ export default function RacquetCard({ racquet, onDelete }: Props) {
             {racquet.weight}g
           </span>
         )}
+        {!hasSpecs && (
+          <span className="chip border-dashed text-ink-400">
+            <Link2 className="h-3.5 w-3.5 text-ink-300" />
+            No string / tension set
+          </span>
+        )}
       </div>
 
-      {/* Usage */}
-      <div className="space-y-1">
-        <UsageBar percent={racquet.usage_percent} needsRestring={racquet.needs_restring} />
-        <p className="text-caption text-ink-400 text-right tnum">
-          {hours}h / {threshold}h threshold
-        </p>
-      </div>
+      {/* Usage + Suggestion + Actions ── pinned to the bottom so these three
+          sections line up across every card, regardless of how many specs
+          are filled in above ── */}
+      <div className="mt-auto flex flex-col gap-4">
+        {/* Usage */}
+        <div className="space-y-1">
+          <UsageBar percent={racquet.usage_percent} needsRestring={racquet.needs_restring} />
+          <p className="text-caption text-ink-400 text-right tnum">
+            {hours}h / {threshold}h threshold
+          </p>
+        </div>
 
-      {/* Suggestion */}
-      <p className="text-caption text-ink-600">{racquet.restring_suggestion}</p>
+        {/* Suggestion */}
+        <p className="text-caption text-ink-600">{racquet.restring_suggestion}</p>
 
-      {/* Actions */}
-      <div className="flex items-center gap-2 pt-3 border-t border-ink-100">
-        <Link to={`/racquets/${racquet.id}`} className="btn-primary flex-1">
-          View Details
-        </Link>
-        <button
-          onClick={() => onDelete(racquet.id)}
-          className="btn-icon hover:text-red-600 hover:bg-red-50"
-          title="Delete racquet"
-          aria-label="Delete racquet"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
+        {/* Actions */}
+        <div className="flex items-center gap-2 pt-3 border-t border-ink-100">
+          <Link to={`/racquets/${racquet.id}`} className="btn-primary flex-1">
+            View Details
+          </Link>
+          <button
+            onClick={() => onDelete(racquet.id)}
+            className="btn-icon hover:text-red-600 hover:bg-red-50"
+            title="Delete racquet"
+            aria-label="Delete racquet"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   )
